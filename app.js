@@ -224,9 +224,17 @@ function updateAddress(values) {
     url.searchParams.delete(legacyKey);
   }
   for (const parameter of PARAMS) {
-    url.searchParams.set(parameter.key, formatNumber(values[parameter.key]));
+    if (values[parameter.key] === BobbinDefaults[parameter.key]) {
+      url.searchParams.delete(parameter.key);
+    } else {
+      url.searchParams.set(parameter.key, formatNumber(values[parameter.key]));
+    }
   }
-  url.searchParams.set("lang", currentLang);
+  if (currentLang === "en") {
+    url.searchParams.delete("lang");
+  } else {
+    url.searchParams.set("lang", currentLang);
+  }
   window.history.replaceState(null, "", url);
 }
 
@@ -708,7 +716,11 @@ $("#lang-toggle").addEventListener("click", () => {
   strings = BobbinI18n.locales[currentLang];
   applyLanguage();
   const url = new URL(window.location.href);
-  url.searchParams.set("lang", currentLang);
+  if (currentLang === "en") {
+    url.searchParams.delete("lang");
+  } else {
+    url.searchParams.set("lang", currentLang);
+  }
   window.history.replaceState(null, "", url);
   update();
 });
