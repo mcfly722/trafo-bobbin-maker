@@ -1,9 +1,9 @@
 const PARAMS = [
+  { key: "SheetThickness", group: "material", min: 0.01, step: 0.1 },
   { key: "CoreWidth", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreHight", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreLength", group: "core", min: 0.01, step: 0.1 },
   { key: "FrameWidth", group: "frame", min: 0.01, step: 0.1 },
-  { key: "SheetThickness", group: "material", min: 0.01, step: 0.1 },
   { key: "ClearanceMillingCutterRadius", group: "clearances", min: 0, step: 0.1 },
   { key: "TubeExtSideWallLockHight", group: "protrusions", min: 0, step: 0.1 },
   { key: "TubeExtSideWallLockWidth", group: "protrusions", min: 0, step: 0.1 },
@@ -96,6 +96,8 @@ function applyLanguage() {
   $("#drawings-heading").textContent = t("drawings.heading");
   partTabs.setAttribute("aria-label", t("drawings.tabsLabel"));
   $("#lang-toggle").textContent = t("lang.toggle");
+  $("#validation-dialog-title").textContent = t("dialog.validationTitle");
+  $("#validation-dialog-close").textContent = t("dialog.close");
   for (const [group, legend] of groupLegends) {
     legend.textContent = t(`group.${group}`);
   }
@@ -566,8 +568,6 @@ function showValidation(errors) {
     field.error.textContent = messages.join(" ");
     field.error.hidden = false;
   }
-  $("#export-dxf").disabled = Boolean(errors.length);
-  $("#export-dxf").setAttribute("aria-disabled", String(Boolean(errors.length)));
 }
 
 function update() {
@@ -685,10 +685,22 @@ function generateDxf(models) {
   return `${lines.join("\r\n")}\r\n`;
 }
 
+function showValidationDialog(errors) {
+  const list = $("#validation-dialog-errors");
+  list.replaceChildren();
+  for (const error of errors) {
+    const item = document.createElement("li");
+    item.textContent = error.text;
+    list.append(item);
+  }
+  $("#validation-dialog").showModal();
+}
+
 function exportDxf() {
   const result = readValues();
   if (result.errors) {
     showValidation(result.errors);
+    showValidationDialog(result.errors);
     return;
   }
   const content = generateDxf(buildPartModels(result.values));

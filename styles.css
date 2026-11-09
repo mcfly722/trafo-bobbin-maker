@@ -244,6 +244,42 @@ main {
   margin: 16px 0 0;
 }
 
+.validation-dialog {
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgb(23 42 58 / 25%);
+}
+
+.validation-dialog::backdrop {
+  background: rgb(23 42 58 / 45%);
+}
+
+.validation-dialog h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.validation-dialog ul {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  color: var(--warning);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.validation-dialog li + li {
+  margin-top: 6px;
+}
+
+.validation-dialog form {
+  text-align: right;
+}
+
 .drawings {
   min-width: 0;
 }

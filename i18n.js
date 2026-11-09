@@ -55,6 +55,9 @@
     "error.slotsDontReachEdge": "Пазы под клеммы не достигают края щеки. Увеличьте высоту паза под клеммы.",
     "error.rowsTooWide": "Ряды отверстий или пазов выходят за ширину щеки. Уменьшите количество или шаг.",
     "error.cornerHoleConflict": "Угловые отверстия пересекаются с окном или отверстиями клемм. Измените отступ или диаметр.",
+
+    "dialog.validationTitle": "Экспорт невозможен — есть замечания к параметрам",
+    "dialog.close": "Закрыть",
   };
 
   const en = {
@@ -113,6 +116,9 @@
     "error.slotsDontReachEdge": "Terminal slots do not reach the side wall edge. Increase the terminal slot height.",
     "error.rowsTooWide": "Hole or slot rows exceed the side wall width. Reduce the count or pitch.",
     "error.cornerHoleConflict": "Corner holes overlap the window or terminal holes. Change the offset or diameter.",
+
+    "dialog.validationTitle": "Cannot export — there are parameter issues",
+    "dialog.close": "Close",
   };
 
   global.BobbinI18n = {

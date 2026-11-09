@@ -20,7 +20,7 @@
         <p class="eyebrow">BA · TRAFO BOBBIN MAKER</p>
         <h1 id="site-title">Transformer bobbin template</h1>
         <a class="source-link" id="source-link" href="https://github.com/mcfly722/trafo-bobbin-maker">Source code on GitHub</a>
-        <span class="version">v1.2</span>
+        <span class="version">v1.3</span>
       </div>
       <div class="header-actions">
         <button class="lang-button" id="lang-toggle" type="button">RU</button>
@@ -48,5 +48,13 @@
         <div id="drawing-detail"></div>
       </section>
     </main>
+
+    <dialog class="validation-dialog" id="validation-dialog" aria-labelledby="validation-dialog-title">
+      <h2 id="validation-dialog-title">Parameter issues</h2>
+      <ul id="validation-dialog-errors"></ul>
+      <form method="dialog">
+        <button class="text-button" id="validation-dialog-close" type="submit">Close</button>
+      </form>
+    </dialog>
   </body>
 </html>
