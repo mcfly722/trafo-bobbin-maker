@@ -89,7 +89,7 @@ function applyLanguage() {
   $('meta[name="description"]').setAttribute("content", t("meta.description"));
   $("#site-title").textContent = t("header.title");
   $("#source-link").textContent = t("header.sourceLink");
-  $("#export-dxf").textContent = t("header.export");
+  $("#export-dxf").options[0].textContent = t("header.export");
   $("#parameters-heading").textContent = t("params.heading");
   $("#reset").textContent = t("params.reset");
   $("#share-note").textContent = t("params.shareNote");
@@ -581,23 +581,68 @@ function update() {
   updateAddress(result.values);
 }
 
-function addDxfPolyline(points, handle, ownerHandle) {
+function cleanPolylinePoints(points) {
+  const clean = points.filter(([x, y], index) => {
+    if (index === 0) return true;
+    const [px, py] = points[index - 1];
+    return formatNumber(x) !== formatNumber(px) || formatNumber(y) !== formatNumber(py);
+  });
+  if (clean.length > 1) {
+    const [fx, fy] = clean[0];
+    const [lx, ly] = clean[clean.length - 1];
+    if (formatNumber(fx) === formatNumber(lx) && formatNumber(fy) === formatNumber(ly)) clean.pop();
+  }
+  return clean;
+}
+
+function addDxfPolyline(points, ownerHandle, nextHandle) {
+  const clean = cleanPolylinePoints(points);
   const entries = [
-    "0", "LWPOLYLINE", "5", handle, "330", ownerHandle,
-    "100", "AcDbEntity", "8", "CUT",
-    "100", "AcDbPolyline", "90", String(points.length), "70", "1",
+    "0", "POLYLINE", "5", nextHandle(), "330", ownerHandle,
+    "100", "AcDbEntity", "8", "CUT", "370", "0",
+    "100", "AcDb2dPolyline", "66", "1", "70", "1",
+    "10", "0", "20", "0", "30", "0",
   ];
-  for (const [x, y] of points) entries.push("10", formatNumber(x), "20", formatNumber(y));
+  for (const [x, y] of clean) {
+    entries.push(
+      "0", "VERTEX", "5", nextHandle(), "330", ownerHandle,
+      "100", "AcDbEntity", "8", "CUT", "370", "0",
+      "100", "AcDbVertex", "100", "AcDb2dVertex",
+      "10", formatNumber(x), "20", formatNumber(y), "30", "0",
+    );
+  }
+  entries.push(
+    "0", "SEQEND", "5", nextHandle(), "330", ownerHandle,
+    "100", "AcDbEntity", "8", "CUT",
+  );
   return entries;
 }
 
-function generateDxf(models) {
+function addDxfPolylineR12(points) {
+  const clean = cleanPolylinePoints(points);
+  const entries = [
+    "0", "POLYLINE", "8", "CUT", "66", "1", "70", "1", "40", "0", "41", "0",
+    "10", "0", "20", "0", "30", "0",
+  ];
+  for (const [x, y] of clean) {
+    entries.push(
+      "0", "VERTEX", "8", "CUT",
+      "10", formatNumber(x), "20", formatNumber(y), "30", "0",
+    );
+  }
+  entries.push("0", "SEQEND", "8", "CUT");
+  return entries;
+}
+
+function generateDxf(models, version) {
   const gap = 8;
   const entities = [];
   let yOffset = 0;
   let drawingMaxX = 0;
   let drawingMaxY = 0;
-  let nextHandle = 15;
+  let nextHandleValue = 15;
+  const nextHandle = () => (nextHandleValue++).toString(16).toUpperCase();
+  const isR12 = version === "AC1009";
   for (const model of models) {
     const { geometry } = model;
     const points = [...geometry.contours];
@@ -620,16 +665,18 @@ function generateDxf(models) {
       drawingMaxX = Math.max(drawingMaxX, maxX + dx);
       drawingMaxY = Math.max(drawingMaxY, maxY + yOffset - minY);
       for (const contour of geometry.contours) {
-        entities.push(addDxfPolyline(
-          contour.map(([x, y]) => [x + dx, y + yOffset - minY]),
-          (nextHandle++).toString(16).toUpperCase(),
-          "9",
-        ));
+        const points = contour.map(([x, y]) => [x + dx, y + yOffset - minY]);
+        entities.push(isR12 ? addDxfPolylineR12(points) : addDxfPolyline(points, "9", nextHandle));
       }
       for (const circle of geometry.circles) {
-        entities.push([
-          "0", "CIRCLE", "5", (nextHandle++).toString(16).toUpperCase(), "330", "9",
-          "100", "AcDbEntity", "8", "CUT",
+        entities.push(isR12 ? [
+          "0", "CIRCLE", "8", "CUT",
+          "10", formatNumber(circle.x + dx),
+          "20", formatNumber(circle.y + yOffset - minY),
+          "30", "0", "40", formatNumber(circle.r),
+        ] : [
+          "0", "CIRCLE", "5", nextHandle(), "330", "9",
+          "100", "AcDbEntity", "8", "CUT", "370", "0",
           "100", "AcDbCircle",
           "10", formatNumber(circle.x + dx),
           "20", formatNumber(circle.y + yOffset - minY),
@@ -639,6 +686,28 @@ function generateDxf(models) {
     }
     yOffset += rowHeight + gap;
   }
+  if (isR12) {
+    const lines = [
+      "0", "SECTION", "2", "HEADER",
+      "9", "$ACADVER", "1", "AC1009",
+      "9", "$MEASUREMENT", "70", "1",
+      "9", "$EXTMIN", "10", "0", "20", "0", "30", "0",
+      "9", "$EXTMAX", "10", formatNumber(drawingMaxX), "20", formatNumber(drawingMaxY), "30", "0",
+      "0", "ENDSEC",
+      "0", "SECTION", "2", "TABLES",
+      "0", "TABLE", "2", "LTYPE", "70", "1",
+      "0", "LTYPE", "2", "CONTINUOUS", "70", "0", "3", "Solid line", "72", "65", "73", "0", "40", "0",
+      "0", "ENDTAB",
+      "0", "TABLE", "2", "LAYER", "70", "2",
+      "0", "LAYER", "2", "0", "70", "0", "62", "7", "6", "CONTINUOUS",
+      "0", "LAYER", "2", "CUT", "70", "0", "62", "7", "6", "CONTINUOUS",
+      "0", "ENDTAB", "0", "ENDSEC",
+      "0", "SECTION", "2", "ENTITIES",
+      ...entities.flat(),
+      "0", "ENDSEC", "0", "EOF",
+    ];
+    return `${lines.join("\r\n")}\r\n`;
+  }
   const lines = [
     "0", "SECTION", "2", "HEADER",
     "9", "$ACADVER", "1", "AC1015",
@@ -647,7 +716,7 @@ function generateDxf(models) {
     "9", "$CLAYER", "8", "CUT",
     "9", "$EXTMIN", "10", "0", "20", "0", "30", "0",
     "9", "$EXTMAX", "10", formatNumber(drawingMaxX), "20", formatNumber(drawingMaxY), "30", "0",
-    "9", "$HANDSEED", "5", nextHandle.toString(16).toUpperCase(),
+    "9", "$HANDSEED", "5", nextHandleValue.toString(16).toUpperCase(),
     "0", "ENDSEC",
     "0", "SECTION", "2", "TABLES",
     "0", "TABLE", "2", "LTYPE", "5", "1", "100", "AcDbSymbolTable", "70", "3",
@@ -662,7 +731,7 @@ function generateDxf(models) {
     "0", "LAYER", "5", "6", "330", "5", "100", "AcDbSymbolTableRecord", "100", "AcDbLayerTableRecord",
     "2", "0", "70", "0", "62", "7", "6", "CONTINUOUS",
     "0", "LAYER", "5", "7", "330", "5", "100", "AcDbSymbolTableRecord", "100", "AcDbLayerTableRecord",
-    "2", "CUT", "70", "0", "62", "7", "6", "CONTINUOUS",
+    "2", "CUT", "70", "0", "62", "7", "6", "CONTINUOUS", "370", "0",
     "0", "ENDTAB",
     "0", "TABLE", "2", "BLOCK_RECORD", "5", "8", "100", "AcDbSymbolTable", "70", "2",
     "0", "BLOCK_RECORD", "5", "9", "330", "8", "100", "AcDbSymbolTableRecord", "100", "AcDbBlockTableRecord",
@@ -696,19 +765,19 @@ function showValidationDialog(errors) {
   $("#validation-dialog").showModal();
 }
 
-function exportDxf() {
+function exportDxf(version) {
   const result = readValues();
   if (result.errors) {
     showValidation(result.errors);
     showValidationDialog(result.errors);
     return;
   }
-  const content = generateDxf(buildPartModels(result.values));
+  const content = generateDxf(buildPartModels(result.values), version);
   const file = new Blob([content], { type: "application/dxf;charset=utf-8" });
   const fileUrl = URL.createObjectURL(file);
   const link = document.createElement("a");
   link.href = fileUrl;
-  link.download = "bobbin-templates-mm.dxf";
+  link.download = `bobbin-templates-mm-${version.toLowerCase()}.dxf`;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
 }
@@ -736,5 +805,10 @@ $("#lang-toggle").addEventListener("click", () => {
   window.history.replaceState(null, "", url);
   update();
 });
-$("#export-dxf").addEventListener("click", exportDxf);
+$("#export-dxf").addEventListener("change", (event) => {
+  const select = event.target;
+  if (!select.value) return;
+  exportDxf(select.value);
+  select.value = "";
+});
 update();
