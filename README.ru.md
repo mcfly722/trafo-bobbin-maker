@@ -8,6 +8,8 @@
 
 **URL:** https://mcfly722.github.io/trafo-bobbin-maker/?lang=ru
 
+**Release notes:** [CHANGELOG.md](CHANGELOG.md)
+
 ## Возможности
 - экспорт готовых контуров реза в DXF;
 - интерактивные чертежи с подсветкой размеров;

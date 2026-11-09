@@ -8,6 +8,8 @@ An online service for parametric design of a transformer coil bobbin. Set the co
 
 **URL:** https://mcfly722.github.io/trafo-bobbin-maker
 
+**Release notes:** [CHANGELOG.md](CHANGELOG.md)
+
 ## Features
 - export of ready-made cut contours to DXF;
 - interactive drawings with dimension highlighting;
