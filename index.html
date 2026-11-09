@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Параметрический генератор деталей каркаса катушки индуктивности с экспортом DXF.">
+    <title>Шаблон каркаса катушки</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="i18n.js" defer></script>
+    <script src="defaults.js" defer></script>
+    <script src="templates/geometry.js" defer></script>
+    <script src="templates/sidewall.js" defer></script>
+    <script src="templates/horizontal.js" defer></script>
+    <script src="templates/vertical.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">BA · TRAFO BOBBIN MAKER</p>
+        <h1 id="site-title">Шаблон каркаса катушки</h1>
+      </div>
+      <div class="header-actions">
+        <button class="lang-button" id="lang-toggle" type="button">EN</button>
+        <button class="export-button" id="export-dxf" type="button">Экспорт в DXF · 6 деталей</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="parameters panel" aria-labelledby="parameters-heading">
+        <div class="section-heading">
+          <h2 id="parameters-heading">Параметры каркаса (мм)</h2>
+          <button class="text-button" id="reset" type="button">Сбросить</button>
+        </div>
+        <form id="parameters-form">
+          <div id="parameter-fields" class="parameter-groups"></div>
+        </form>
+        <p class="share-note" id="share-note">Скопируйте адрес страницы, чтобы поделиться этими размерами.</p>
+      </section>
+
+      <section class="drawings" aria-labelledby="drawings-heading">
+        <div class="section-heading drawings-heading">
+          <h2 id="drawings-heading">Детали каркаса</h2>
+        </div>
+        <div id="part-tabs" class="part-tabs" role="tablist" aria-label="Выбор детали"></div>
+        <div id="drawing-detail"></div>
+      </section>
+    </main>
+  </body>
+</html>
