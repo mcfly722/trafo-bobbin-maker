@@ -2,7 +2,7 @@
   global.BobbinPartTemplates = global.BobbinPartTemplates || {};
   global.BobbinPartTemplates.vertical = function (v, formatNumber, strings) {
     const { inwardArchPoints, filletedPolygonPoints } = global.BobbinGeometry;
-    const tubeH = v.TubeRibbonWidth + 2 * v.SheetThickness;
+    const tubeH = v.TubeRibbonWidth;
     const verticalW = tubeH;
     const verticalL = v.TubeLength;
     const verticalSlotDepth = Math.max((verticalL - v.TubeSlotWidth) / 2, 0.1);
@@ -57,7 +57,7 @@
           parameterKeys: ["ClearanceMillingCutterRadius"],
           primaryParameterKeys: ["ClearanceMillingCutterRadius"],
         },
-        { axis: "x", from: -verticalW / 2, to: verticalW / 2, y: 0, label: formatNumber(verticalW), parameterKeys: ["CoreWidth", "SheetThickness"], labelDy: -3, internal: true },
+        { axis: "x", from: -verticalW / 2, to: verticalW / 2, y: 0, label: formatNumber(verticalW), parameterKeys: ["CoreWidth"], labelDy: -3, internal: true },
         { axis: "x", from: -verticalW / 2 + edgeNotchLeft, to: verticalW / 2 - edgeNotchRight, y: verticalL / 2 + 8, label: formatNumber(verticalW - edgeNotchLeft - edgeNotchRight), parameterKeys: ["CoreWidth", "SheetThickness", "TubeExtVerticalLockWidth"], primaryParameterKeys: ["CoreWidth"] },
         { axis: "y", from: -verticalL / 2, to: verticalL / 2, x: verticalW / 2 + 9, label: formatNumber(verticalL), parameterKeys: ["CoreLength"], primaryParameterKeys: ["CoreLength"] },
         {
