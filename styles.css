@@ -50,6 +50,16 @@ input {
   letter-spacing: 0.13em;
 }
 
+.source-link {
+  color: #90bcb9;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
 .export-button {
   flex: 0 0 auto;
   min-height: 46px;

@@ -14,3 +14,5 @@ An online service for parametric design of a transformer coil bobbin. Set the co
 - validation of geometry and parameter bounds;
 - RU/EN language support;
 - all parameters are stored in the page URL — links can be shared.
+
+[Русская версия](README.ru.md)

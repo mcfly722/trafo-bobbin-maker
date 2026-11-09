@@ -45,7 +45,7 @@ let activePartKey = "sidewall";
 let focusedParameterKey = null;
 let hoveredParameterKey = null;
 let lastChangedParameterKey = null;
-let currentLang = new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "ru";
+let currentLang = new URLSearchParams(window.location.search).get("lang") === "ru" ? "ru" : "en";
 let strings = BobbinI18n.locales[currentLang];
 
 const t = (key, params) => BobbinI18n.format(strings[key], params);
@@ -88,6 +88,7 @@ function applyLanguage() {
   document.title = t("meta.title");
   $('meta[name="description"]').setAttribute("content", t("meta.description"));
   $("#site-title").textContent = t("header.title");
+  $("#source-link").textContent = t("header.sourceLink");
   $("#export-dxf").textContent = t("header.export");
   $("#parameters-heading").textContent = t("params.heading");
   $("#reset").textContent = t("params.reset");
