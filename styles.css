@@ -60,6 +60,15 @@ input {
   text-decoration: underline;
 }
 
+.version {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid rgb(144 188 185 / 45%);
+  border-radius: 999px;
+  color: #90bcb9;
+  font-size: 11px;
+}
+
 .export-button {
   flex: 0 0 auto;
   min-height: 46px;
