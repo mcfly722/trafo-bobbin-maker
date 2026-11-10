@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6
+
+**Drawing panning**
+
+- **Drag drawings with the mouse** — press and hold anywhere on a drawing and move the mouse to shift the view. Works with touchscreens as well.
+- **Center button** — a square crosshair button in the drawing card header returns the drawing to its original centered position.
+- Panning is remembered per part and is preserved when switching tabs or changing parameters.
+
 ## v1.5
 
 **Dimension chain on the vertical insert drawing**

@@ -12,6 +12,7 @@
     "drawings.tabsLabel": "Выбор детали",
     "lang.toggle": "EN",
     "drawing.ariaLabel": "{title}, чертёж с размерами в миллиметрах",
+    "drawing.centerView": "Центрировать",
 
     "group.core": "Сердечник",
     "group.frame": "Рама",
@@ -73,6 +74,7 @@
     "drawings.tabsLabel": "Part selection",
     "lang.toggle": "RU",
     "drawing.ariaLabel": "{title}, drawing with dimensions in millimeters",
+    "drawing.centerView": "Center",
 
     "group.core": "Core",
     "group.frame": "Frame",

@@ -45,6 +45,7 @@ let activePartKey = "sidewall";
 let focusedParameterKey = null;
 let hoveredParameterKey = null;
 let lastChangedParameterKey = null;
+const panOffsets = new Map();
 let currentLang = new URLSearchParams(window.location.search).get("lang") === "ru" ? "ru" : "en";
 let strings = BobbinI18n.locales[currentLang];
 
@@ -456,9 +457,11 @@ function renderPartSvg(model) {
   const b = geometry.viewBounds;
   const width = b.maxX - b.minX;
   const height = b.maxY - b.minY;
+  const formatViewBox = (panX, panY) => `${formatNumber(panX)} ${formatNumber(panY)} ${formatNumber(width)} ${formatNumber(height)}`;
+  const pan = panOffsets.get(model.key) || { x: 0, y: 0 };
   const svg = svgElement("svg", {
     xmlns: SVG_NS,
-    viewBox: `0 0 ${formatNumber(width)} ${formatNumber(height)}`,
+    viewBox: formatViewBox(pan.x, pan.y),
     role: "img",
     "aria-label": t("drawing.ariaLabel", { title: model.title }),
     preserveAspectRatio: "xMidYMid meet",
@@ -491,6 +494,33 @@ function renderPartSvg(model) {
     }));
   }
   for (const dimension of model.dimensions) renderDimension(svg, dimension, b);
+  let dragState = null;
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const current = panOffsets.get(model.key) || { x: 0, y: 0 };
+    dragState = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, panX: current.x, panY: current.y };
+    svg.setPointerCapture(event.pointerId);
+    svg.classList.add("is-dragging");
+    event.preventDefault();
+  });
+  svg.addEventListener("pointermove", (event) => {
+    if (!dragState || event.pointerId !== dragState.pointerId) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = Math.max(width / rect.width, height / rect.height);
+    const next = {
+      x: dragState.panX - (event.clientX - dragState.startX) * scale,
+      y: dragState.panY - (event.clientY - dragState.startY) * scale,
+    };
+    panOffsets.set(model.key, next);
+    svg.setAttribute("viewBox", formatViewBox(next.x, next.y));
+  });
+  const endDrag = (event) => {
+    if (!dragState || event.pointerId !== dragState.pointerId) return;
+    dragState = null;
+    svg.classList.remove("is-dragging");
+  };
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
   return svg;
 }
 
@@ -542,7 +572,24 @@ function renderModels(values) {
     const quantity = document.createElement("span");
     quantity.className = "quantity";
     quantity.textContent = model.subtitle;
-    header.append(title, quantity);
+    const centerButton = document.createElement("button");
+    centerButton.className = "icon-button center-button";
+    centerButton.type = "button";
+    centerButton.title = t("drawing.centerView");
+    centerButton.setAttribute("aria-label", t("drawing.centerView"));
+    centerButton.innerHTML = `<svg viewBox="0 0 16 16" width="14" height="14" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round" aria-hidden="true">
+      <line x1="8" y1="1" x2="8" y2="15"/>
+      <line x1="1" y1="8" x2="15" y2="8"/>
+      <circle cx="8" cy="8" r="2.4"/>
+    </svg>`;
+    centerButton.addEventListener("click", () => {
+      panOffsets.delete(model.key);
+      renderModels(values);
+    });
+    const headerActions = document.createElement("span");
+    headerActions.className = "drawing-card-actions";
+    headerActions.append(quantity, centerButton);
+    header.append(title, headerActions);
     const figure = document.createElement("div");
     figure.className = "drawing-figure";
     figure.append(renderPartSvg(model));

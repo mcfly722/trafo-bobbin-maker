@@ -358,6 +358,39 @@ main {
   white-space: nowrap;
 }
 
+.drawing-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--accent-dark);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  border-color: var(--accent);
+  background: rgb(19 107 104 / 8%);
+}
+
+.icon-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
 .drawing-card .drawing-figure {
   display: grid;
   min-height: min(72vh, 780px);
@@ -365,11 +398,17 @@ main {
   padding: 4px 16px 18px;
 }
 
-.drawing-card svg {
+.drawing-card .drawing-figure svg {
   display: block;
   width: 100%;
   height: min(72vh, 780px);
   min-height: 400px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.drawing-card .drawing-figure svg.is-dragging {
+  cursor: grabbing;
 }
 
 .dimension.is-highlighted line {
@@ -404,7 +443,7 @@ main {
     padding: 0 7px 10px;
   }
 
-  .drawing-card svg {
+  .drawing-card .drawing-figure svg {
     height: min(68vh, 640px);
     min-height: 320px;
   }
