@@ -1,7 +1,7 @@
 (function (global) {
   const ru = {
     "meta.title": "Шаблон каркаса катушки",
-    "meta.description": "Параметрический генератор деталей каркаса катушки индуктивности с экспортом DXF.",
+    "meta.description": "Параметрический генератор деталей каркаса катушки трансформатора: размеры сердечника, рамы, клемм и крепежа, чертежи с размерами и экспорт контуров реза в DXF (1:1) для лазерной резки или фрезеровки.",
     "header.title": "Шаблон каркаса катушки",
     "header.sourceLink": "Исходный код на GitHub",
     "header.export": "Экспорт",
@@ -64,7 +64,7 @@
 
   const en = {
     "meta.title": "Transformer bobbin template",
-    "meta.description": "Parametric generator of transformer bobbin parts with DXF export.",
+    "meta.description": "Parametric generator of transformer bobbin parts: set core, frame, terminal and fastener dimensions, view dimensioned drawings and export true-scale DXF cut contours for laser cutting or milling.",
     "header.title": "Transformer bobbin template",
     "header.sourceLink": "Source code on GitHub",
     "header.export": "Export",
