@@ -1,7 +1,7 @@
 # Trafo Bobbin Maker
 
 ![Status: done](https://img.shields.io/badge/status-done-success.svg)
-![version](https://img.shields.io/badge/version-1.6-blue)
+![version](https://img.shields.io/badge/version-1.7-blue)
 [![License: GPL3.0](https://img.shields.io/badge/License-GPL3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 Онлайн-сервис параметрического проектирования каркаса катушки трансформатора. Задайте размеры сердечника, рамы, клемм и крепежа — сервис построит чертежи деталей с размерами и сформирует DXF-файл с контурами реза в натуральном масштабе (1:1, миллиметры) для лазерной резки или фрезеровки.

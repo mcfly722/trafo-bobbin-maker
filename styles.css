@@ -391,6 +391,15 @@ main {
   stroke-linecap: round;
 }
 
+.zoom-button {
+  width: auto;
+  min-width: 26px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .drawing-card .drawing-figure {
   display: grid;
   min-height: min(72vh, 780px);

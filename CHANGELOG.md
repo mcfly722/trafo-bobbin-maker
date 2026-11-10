@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7
+
+**Mouse wheel zoom**
+
+- **Zoom drawings with the mouse wheel** — scroll over a drawing to zoom in (up to ×25) or out (down to 50%), anchored at the cursor position.
+- **100% button** — a new button in the drawing card header resets the zoom while keeping the currently centered point in place.
+- **Center button now resets zoom too** — the crosshair button returns the drawing to its original fully-visible centered state, and correctly centers the part at any zoom level.
+
 ## v1.6
 
 **Drawing panning**

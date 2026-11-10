@@ -457,11 +457,11 @@ function renderPartSvg(model) {
   const b = geometry.viewBounds;
   const width = b.maxX - b.minX;
   const height = b.maxY - b.minY;
-  const formatViewBox = (panX, panY) => `${formatNumber(panX)} ${formatNumber(panY)} ${formatNumber(width)} ${formatNumber(height)}`;
-  const pan = panOffsets.get(model.key) || { x: 0, y: 0 };
+  const formatViewBox = (view) => `${formatNumber(view.x)} ${formatNumber(view.y)} ${formatNumber(width / view.z)} ${formatNumber(height / view.z)}`;
+  const pan = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
   const svg = svgElement("svg", {
     xmlns: SVG_NS,
-    viewBox: formatViewBox(pan.x, pan.y),
+    viewBox: formatViewBox(pan),
     role: "img",
     "aria-label": t("drawing.ariaLabel", { title: model.title }),
     preserveAspectRatio: "xMidYMid meet",
@@ -497,8 +497,8 @@ function renderPartSvg(model) {
   let dragState = null;
   svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
-    const current = panOffsets.get(model.key) || { x: 0, y: 0 };
-    dragState = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, panX: current.x, panY: current.y };
+    const current = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
+    dragState = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, panX: current.x, panY: current.y, zoom: current.z };
     svg.setPointerCapture(event.pointerId);
     svg.classList.add("is-dragging");
     event.preventDefault();
@@ -506,13 +506,14 @@ function renderPartSvg(model) {
   svg.addEventListener("pointermove", (event) => {
     if (!dragState || event.pointerId !== dragState.pointerId) return;
     const rect = svg.getBoundingClientRect();
-    const scale = Math.max(width / rect.width, height / rect.height);
+    const scale = Math.max(width / dragState.zoom / rect.width, height / dragState.zoom / rect.height);
     const next = {
       x: dragState.panX - (event.clientX - dragState.startX) * scale,
       y: dragState.panY - (event.clientY - dragState.startY) * scale,
+      z: dragState.zoom,
     };
     panOffsets.set(model.key, next);
-    svg.setAttribute("viewBox", formatViewBox(next.x, next.y));
+    svg.setAttribute("viewBox", formatViewBox(next));
   });
   const endDrag = (event) => {
     if (!dragState || event.pointerId !== dragState.pointerId) return;
@@ -521,6 +522,32 @@ function renderPartSvg(model) {
   };
   svg.addEventListener("pointerup", endDrag);
   svg.addEventListener("pointercancel", endDrag);
+  svg.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const current = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
+    const z = Math.min(Math.max(current.z * (event.deltaY < 0 ? 1.2 : 1 / 1.2), 0.5), 25);
+    if (z === current.z) return;
+    const rect = svg.getBoundingClientRect();
+    const viewMetrics = (zoom) => {
+      const viewWidth = width / zoom;
+      const viewHeight = height / zoom;
+      const scale = Math.min(rect.width / viewWidth, rect.height / viewHeight);
+      return { scale, marginX: (rect.width - viewWidth * scale) / 2, marginY: (rect.height - viewHeight * scale) / 2 };
+    };
+    const before = viewMetrics(current.z);
+    const pointerX = event.clientX - rect.left;
+    const pointerY = event.clientY - rect.top;
+    const anchorX = current.x + (pointerX - before.marginX) / before.scale;
+    const anchorY = current.y + (pointerY - before.marginY) / before.scale;
+    const after = viewMetrics(z);
+    const next = {
+      x: anchorX - (pointerX - after.marginX) / after.scale,
+      y: anchorY - (pointerY - after.marginY) / after.scale,
+      z,
+    };
+    panOffsets.set(model.key, next);
+    svg.setAttribute("viewBox", formatViewBox(next));
+  }, { passive: false });
   return svg;
 }
 
@@ -586,9 +613,23 @@ function renderModels(values) {
       panOffsets.delete(model.key);
       renderModels(values);
     });
+    const zoomButton = document.createElement("button");
+    zoomButton.className = "icon-button zoom-button";
+    zoomButton.type = "button";
+    zoomButton.title = t("drawing.resetZoom");
+    zoomButton.setAttribute("aria-label", t("drawing.resetZoom"));
+    zoomButton.textContent = "100%";
+    zoomButton.addEventListener("click", () => {
+      const bounds = model.geometry.viewBounds;
+      const width = bounds.maxX - bounds.minX;
+      const height = bounds.maxY - bounds.minY;
+      const view = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
+      panOffsets.set(model.key, { x: view.x + (width / view.z - width) / 2, y: view.y + (height / view.z - height) / 2, z: 1 });
+      renderModels(values);
+    });
     const headerActions = document.createElement("span");
     headerActions.className = "drawing-card-actions";
-    headerActions.append(quantity, centerButton);
+    headerActions.append(quantity, zoomButton, centerButton);
     header.append(title, headerActions);
     const figure = document.createElement("div");
     figure.className = "drawing-figure";

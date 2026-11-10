@@ -13,6 +13,7 @@
     "lang.toggle": "EN",
     "drawing.ariaLabel": "{title}, чертёж с размерами в миллиметрах",
     "drawing.centerView": "Центрировать",
+    "drawing.resetZoom": "Масштаб 100%",
 
     "group.core": "Сердечник",
     "group.frame": "Рама",
@@ -75,6 +76,7 @@
     "lang.toggle": "RU",
     "drawing.ariaLabel": "{title}, drawing with dimensions in millimeters",
     "drawing.centerView": "Center",
+    "drawing.resetZoom": "Reset zoom to 100%",
 
     "group.core": "Core",
     "group.frame": "Frame",
