@@ -283,8 +283,49 @@ function screenPoint(x, y, bounds) {
   return [x - bounds.minX, bounds.maxY - y];
 }
 
-function renderDimension(svg, dimension, bounds) {
+function renderDimension(svg, dimension, bounds, unit = 1, contours = []) {
   const lineColor = "#1d6171";
+  const EPSILON = 1e-6;
+  const edgeCrossingX = (y) => {
+    const crossingsAt = (scanY) => {
+      const xs = [];
+      for (const contour of contours) {
+        for (let i = 0; i < contour.length; i++) {
+          const [x1, y1] = contour[i];
+          const [x2, y2] = contour[(i + 1) % contour.length];
+          if (y1 === y2) continue;
+          if ((y1 < scanY && y2 >= scanY) || (y2 < scanY && y1 >= scanY)) {
+            xs.push(x1 + ((scanY - y1) * (x2 - x1)) / (y2 - y1));
+          }
+        }
+      }
+      return xs;
+    };
+    let xs = crossingsAt(y);
+    if (!xs.length) xs = [...crossingsAt(y - EPSILON), ...crossingsAt(y + EPSILON)];
+    if (!xs.length) return null;
+    return dimension.x >= 0 ? Math.max(...xs) : Math.min(...xs);
+  };
+  const edgeCrossingY = (x) => {
+    const crossingsAt = (scanX) => {
+      const ys = [];
+      for (const contour of contours) {
+        for (let i = 0; i < contour.length; i++) {
+          const [x1, y1] = contour[i];
+          const [x2, y2] = contour[(i + 1) % contour.length];
+          if (x1 === x2) continue;
+          if ((x1 < scanX && x2 >= scanX) || (x2 < scanX && x1 >= scanX)) {
+            ys.push(y1 + ((scanX - x1) * (y2 - y1)) / (x2 - x1));
+          }
+        }
+      }
+      return ys;
+    };
+    let ys = crossingsAt(x);
+    if (!ys.length) ys = [...crossingsAt(x - EPSILON), ...crossingsAt(x + EPSILON)];
+    if (!ys.length) return null;
+    return dimension.y >= 0 ? Math.max(...ys) : Math.min(...ys);
+  };
   const dimensionAttributes = {
     class: "dimension",
     "data-parameter-keys": (dimension.parameterKeys || []).join(" "),
@@ -298,21 +339,21 @@ function renderDimension(svg, dimension, bounds) {
     const length = Math.hypot(dx, dy) || 1;
     const ux = dx / length;
     const uy = dy / length;
-    const arrowSize = 1.7;
+    const arrowSize = 1.7 * unit;
     const px = -uy * arrowSize * 0.48;
     const py = ux * arrowSize * 0.48;
     const group = svgElement("g", dimensionAttributes);
     group.append(
-      svgElement("line", { x1: start[0], y1: start[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.35 }),
+      svgElement("line", { x1: start[0], y1: start[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 1, "vector-effect": "non-scaling-stroke" }),
       svgElement("path", {
         d: `M ${start[0]} ${start[1]} L ${start[0] + ux * arrowSize + px} ${start[1] + uy * arrowSize + py} L ${start[0] + ux * arrowSize - px} ${start[1] + uy * arrowSize - py} Z`,
         fill: lineColor,
       }),
       svgElement("text", {
-        x: end[0] + 1.5,
-        y: end[1] - 1.5,
+        x: end[0] + 1.5 * unit,
+        y: end[1] - 1.5 * unit,
         fill: lineColor,
-        "font-size": 3.5,
+        "font-size": 3.5 * unit,
         "font-family": "Arial, sans-serif",
         "text-anchor": "start",
         "dominant-baseline": "central",
@@ -328,12 +369,12 @@ function renderDimension(svg, dimension, bounds) {
     const y = bounds.maxY - dimension.y;
     start = screenPoint(dimension.from, dimension.y, bounds);
     end = screenPoint(dimension.to, dimension.y, bounds);
-    const offset = dimension.internal ? 0 : (dimension.y < 0 ? 3 : -3);
+    const offset = dimension.internal ? 0 : (dimension.y < 0 ? 3 : -3) * unit;
     textPoint = [(start[0] + end[0]) / 2, y + offset];
   } else {
     start = screenPoint(dimension.x, dimension.from, bounds);
     end = screenPoint(dimension.x, dimension.to, bounds);
-    const offset = dimension.internal ? 0 : 4;
+    const offset = dimension.internal ? 0 : 4 * unit;
     textPoint = [start[0] + offset, (start[1] + end[1]) / 2];
   }
   if (dimension.labelBefore) textPoint = [start[0] - dimension.labelBefore, textPoint[1]];
@@ -344,7 +385,7 @@ function renderDimension(svg, dimension, bounds) {
     ...dimensionAttributes,
     class: dimension.internal ? "dimension internal-dimension" : "dimension",
   });
-  const arrowSize = dimension.arrowSize || 1.7;
+  const arrowSize = (dimension.arrowSize || 1.7) * unit;
   const dx = end[0] - start[0];
   const dy = end[1] - start[1];
   const length = Math.hypot(dx, dy) || 1;
@@ -359,7 +400,8 @@ function renderDimension(svg, dimension, bounds) {
         x2: start[0] - ux * arrowSize,
         y2: start[1] - uy * arrowSize,
         stroke: lineColor,
-        "stroke-width": 0.35,
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
       }),
       svgElement("line", {
         x1: end[0] + ux * arrowSize,
@@ -367,12 +409,13 @@ function renderDimension(svg, dimension, bounds) {
         x2: end[0] + ux * extension.after,
         y2: end[1] + uy * extension.after,
         stroke: lineColor,
-        "stroke-width": 0.35,
+        "stroke-width": 1,
+        "vector-effect": "non-scaling-stroke",
       }),
     );
   } else {
     group.append(
-      svgElement("line", { x1: start[0], y1: start[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.35 }),
+      svgElement("line", { x1: start[0], y1: start[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 1, "vector-effect": "non-scaling-stroke" }),
     );
   }
   const arrows = dimension.arrowOutside
@@ -386,29 +429,41 @@ function renderDimension(svg, dimension, bounds) {
     group.append(svgElement("path", {
       d: `M ${point[0]} ${point[1]} L ${bx + px} ${by + py} L ${bx - px} ${by - py} Z`,
       fill: lineColor,
+      "vector-effect": "non-scaling-stroke",
     }));
   }
   if (dimension.axis === "x") {
-    const extensionY = dimension.extensionFromY ?? dimension.y + (dimension.extensionOffset ?? (dimension.internal ? 0 : (dimension.y < 0 ? 2 : -2)));
-    const e1 = screenPoint(dimension.from, extensionY, bounds);
-    const e2 = screenPoint(dimension.to, extensionY, bounds);
+    const fallbackY = dimension.y + (dimension.internal ? 0 : (dimension.y < 0 ? 2 : -2) * unit);
+    const extensionStartY = (x, explicitY) => {
+      if (explicitY != null) return explicitY;
+      if (dimension.extensionFromY != null) return dimension.extensionFromY;
+      if (dimension.extensionOffset != null) return dimension.y + dimension.extensionOffset;
+      return dimension.internal ? dimension.y : edgeCrossingY(x) ?? fallbackY;
+    };
+    const e1 = screenPoint(dimension.from, extensionStartY(dimension.from, dimension.extensionFromY1), bounds);
+    const e2 = screenPoint(dimension.to, extensionStartY(dimension.to, dimension.extensionFromY2), bounds);
     group.append(
-      svgElement("line", { x1: e1[0], y1: e1[1], x2: start[0], y2: start[1], stroke: lineColor, "stroke-width": 0.25 }),
-      svgElement("line", { x1: e2[0], y1: e2[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.25 }),
+      svgElement("line", { x1: e1[0], y1: e1[1], x2: start[0], y2: start[1], stroke: lineColor, "stroke-width": 0.75, "vector-effect": "non-scaling-stroke" }),
+      svgElement("line", { x1: e2[0], y1: e2[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.75, "vector-effect": "non-scaling-stroke" }),
     );
   } else {
-    const e1 = screenPoint(dimension.extensionFromX1 ?? dimension.x + (dimension.internal ? 0 : -2), dimension.from, bounds);
-    const e2 = screenPoint(dimension.extensionFromX2 ?? dimension.x + (dimension.internal ? 0 : -2), dimension.to, bounds);
+    const fallbackX = dimension.x + (dimension.internal ? 0 : -2 * unit);
+    const extensionStartX = (y) => {
+      if (dimension.internal) return dimension.x;
+      return edgeCrossingX(y) ?? fallbackX;
+    };
+    const e1 = screenPoint(dimension.extensionFromX1 ?? extensionStartX(dimension.from), dimension.from, bounds);
+    const e2 = screenPoint(dimension.extensionFromX2 ?? extensionStartX(dimension.to), dimension.to, bounds);
     group.append(
-      svgElement("line", { x1: e1[0], y1: e1[1], x2: start[0], y2: start[1], stroke: lineColor, "stroke-width": 0.25 }),
-      svgElement("line", { x1: e2[0], y1: e2[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.25 }),
+      svgElement("line", { x1: e1[0], y1: e1[1], x2: start[0], y2: start[1], stroke: lineColor, "stroke-width": 0.75, "vector-effect": "non-scaling-stroke" }),
+      svgElement("line", { x1: e2[0], y1: e2[1], x2: end[0], y2: end[1], stroke: lineColor, "stroke-width": 0.75, "vector-effect": "non-scaling-stroke" }),
     );
   }
   group.append(svgElement("text", {
     x: textPoint[0],
     y: textPoint[1],
     fill: lineColor,
-    "font-size": 3.5,
+    "font-size": 3.5 * unit,
     "font-family": "Arial, sans-serif",
     "text-anchor": "middle",
     "dominant-baseline": "central",
@@ -459,6 +514,7 @@ function renderPartSvg(model) {
   const height = b.maxY - b.minY;
   const formatViewBox = (view) => `${formatNumber(view.x)} ${formatNumber(view.y)} ${formatNumber(width / view.z)} ${formatNumber(height / view.z)}`;
   const pan = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
+  const unit = 1 / pan.z;
   const svg = svgElement("svg", {
     xmlns: SVG_NS,
     viewBox: formatViewBox(pan),
@@ -470,17 +526,17 @@ function renderPartSvg(model) {
   const parts = svgElement("g", {
     fill: "#e9edf0",
     stroke: "#25394a",
-    "stroke-width": 0.35,
+    "stroke-width": 1.5,
     "stroke-linejoin": "round",
     "stroke-linecap": "round",
   });
   for (const [index, contour] of geometry.contours.entries()) {
     const path = pathFromPoints(contour.map(([x, y]) => screenPoint(x, y, b)));
-    parts.append(svgElement("path", { d: path, fill: index === 0 ? "#e9edf0" : "#fff" }));
+    parts.append(svgElement("path", { d: path, fill: index === 0 ? "#e9edf0" : "#fff", "vector-effect": "non-scaling-stroke" }));
   }
   for (const circle of geometry.circles) {
     const [cx, cy] = screenPoint(circle.x, circle.y, b);
-    parts.append(svgElement("circle", { cx, cy, r: circle.r, fill: "#fff" }));
+    parts.append(svgElement("circle", { cx, cy, r: circle.r, fill: "#fff", "vector-effect": "non-scaling-stroke" }));
   }
   svg.append(parts);
   for (const reference of geometry.referenceContours || []) {
@@ -489,11 +545,12 @@ function renderPartSvg(model) {
       d: path,
       fill: "none",
       stroke: reference.stroke,
-      "stroke-width": 0.45,
-      "stroke-dasharray": "2 1.2",
+      "stroke-width": 1,
+      "vector-effect": "non-scaling-stroke",
+      "stroke-dasharray": `${formatNumber(2 * unit)} ${formatNumber(1.2 * unit)}`,
     }));
   }
-  for (const dimension of model.dimensions) renderDimension(svg, dimension, b);
+  for (const dimension of model.dimensions) renderDimension(svg, dimension, b, unit, geometry.contours);
   let dragState = null;
   svg.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
@@ -522,6 +579,7 @@ function renderPartSvg(model) {
   };
   svg.addEventListener("pointerup", endDrag);
   svg.addEventListener("pointercancel", endDrag);
+  let zoomRenderTimer = null;
   svg.addEventListener("wheel", (event) => {
     event.preventDefault();
     const current = panOffsets.get(model.key) || { x: 0, y: 0, z: 1 };
@@ -547,6 +605,10 @@ function renderPartSvg(model) {
     };
     panOffsets.set(model.key, next);
     svg.setAttribute("viewBox", formatViewBox(next));
+    clearTimeout(zoomRenderTimer);
+    zoomRenderTimer = setTimeout(() => {
+      if (svg.isConnected) svg.replaceWith(renderPartSvg(model));
+    }, 120);
   }, { passive: false });
   return svg;
 }

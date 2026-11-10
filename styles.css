@@ -433,12 +433,12 @@ main {
 }
 
 .dimension.is-dependent line {
-  stroke-width: 0.65 !important;
+  stroke-width: 1.4px !important;
 }
 
 .dimension.is-dependent path {
   stroke: #1d6171;
-  stroke-width: 0.45;
+  stroke-width: 1px;
 }
 
 .dimension.is-dependent text {

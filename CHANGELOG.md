@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.8
+
+**Dimension extension lines always reach the part, and arcs stay smooth at any zoom**
+
+- **Fixed extension lines hanging in mid-air** — on all three drawings several dimension extension lines started off the part edge: the ones landing exactly on a horizontal edge or a vertical edge line found no contour crossing, and the ones aimed at filleted corners targeted the imaginary sharp corner. Both cases now resolve to the real edge of the part:
+  - contour crossings falling exactly on an edge are retried with a tiny inward offset;
+  - dimensions pinned to filleted corners (overall widths, protrusion width, slot depths, overall sidewall width) now start at the fillet tangent point on the part edge.
+- **Corner hole distance dimensions point at the hole center** — the horizontal and vertical extension lines next to the corner hole now run to the hole center instead of stopping at the edge level or hanging short.
+- **Terminal slot height dimension no longer crosses the slot** — its extension lines stop at the left edge of the first terminal slot instead of running through the cutout to its center.
+- **Smooth arcs at any zoom level** — fillets, tab arches, inward arches, and terminal slot arches were approximated with a fixed 8–12 chords and turned visibly polygonal when zoomed in. The chord count now adapts to each arc's radius and sweep, keeping the deviation from the ideal arc under 0.0015 mm (sub-pixel even at ×25 zoom), which also improves the DXF cut contour fidelity.
+- **Thicker highlight for dependent dimensions** — dependent dimensions are easier to see when zoomed in.
+
 ## v1.7
 
 **Mouse wheel zoom**

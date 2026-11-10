@@ -92,7 +92,7 @@
           parameterKeys: ["ClearanceMillingCutterRadius"],
           primaryParameterKeys: ["ClearanceMillingCutterRadius"],
         },
-        { axis: "x", from: -halfTab, to: halfTab, y: tubeLengthWithLocks / 2 + 8, label: formatNumber(tabWidth), parameterKeys: ["CoreHight", "SheetThickness", "TubeExtSideWallLockWidth"] },
+        { axis: "x", from: -halfTab, to: halfTab, y: tubeLengthWithLocks / 2 + 8, label: formatNumber(tabWidth), parameterKeys: ["CoreHight", "SheetThickness", "TubeExtSideWallLockWidth"], extensionFromY1: halfL + v.TubeExtSideWallLockHight - horizontalOuterRadius, extensionFromY2: halfL + v.TubeExtSideWallLockHight - horizontalOuterRadius },
         { axis: "y", from: -tubeLengthWithLocks / 2, to: tubeLengthWithLocks / 2, x: halfTab + 22, label: formatNumber(tubeLengthWithLocks), parameterKeys: ["CoreLength", "TubeExtSideWallLockHight"] },
         { axis: "x", from: -halfW, to: halfW, y: v.TubeSlotWidth / 2 + 5, label: formatNumber(tubeW), parameterKeys: ["CoreHight", "SheetThickness"], labelDy: -3, internal: true },
         {
@@ -115,6 +115,7 @@
           parameterKeys: ["TubeExtSideWallLockWidth"],
           primaryParameterKeys: ["TubeExtSideWallLockWidth"],
           extensionFromY: -halfL - v.TubeExtSideWallLockHight,
+          extensionFromY1: -halfL - v.TubeExtSideWallLockHight + horizontalOuterRadius,
         },
         {
           axis: "y",
@@ -157,6 +158,7 @@
           arrowOutside: true,
           arrowSize: 1.1,
           extensionFromY: -horizontalSlotHalfWidth,
+          extensionFromY2: -horizontalSlotHalfWidth - 0.5,
           labelAtMidpoint: true,
         },
     ];

@@ -1,5 +1,13 @@
 (function (global) {
+  function arcSegmentsForRadius(radius, sweep = Math.PI) {
+    if (!(radius > 0)) return 1;
+    const maxSagitta = Math.min(0.0015, radius / 4);
+    const steps = Math.abs(sweep) / (2 * Math.acos(1 - maxSagitta / radius));
+    return Math.max(1, Math.min(360, Math.ceil(steps)));
+  }
+
   function inwardArchPoints(points, index, radius, segments) {
+    const arcSegments = segments || arcSegmentsForRadius(radius);
     const vertex = points[index];
     const previous = points[(index + points.length - 1) % points.length];
     const next = points[(index + 1) % points.length];
@@ -22,8 +30,8 @@
     const chord = [(end[0] - start[0]) / (2 * cornerRadius), (end[1] - start[1]) / (2 * cornerRadius)];
     const center = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
     const inward = [-Math.sign(vertex[0]), 0];
-    return Array.from({ length: segments + 1 }, (_, step) => {
-      const angle = Math.PI * step / segments;
+    return Array.from({ length: arcSegments + 1 }, (_, step) => {
+      const angle = Math.PI * step / arcSegments;
       return [
         center[0] - chord[0] * cornerRadius * Math.cos(angle) + inward[0] * cornerRadius * Math.sin(angle),
         center[1] - chord[1] * cornerRadius * Math.cos(angle) + inward[1] * cornerRadius * Math.sin(angle),
@@ -31,7 +39,7 @@
     });
   }
 
-  function filletedPolygonPoints(points, cornerRadii, segments = 8) {
+  function filletedPolygonPoints(points, cornerRadii, segments = 0) {
     const area = points.reduce((sum, point, index) => {
       const next = points[(index + 1) % points.length];
       return sum + point[0] * next[1] - next[0] * point[1];
@@ -60,8 +68,9 @@
         ];
         const startAngle = vertex[1] > 0 ? Math.PI : 0;
         const sweep = -Math.PI;
-        return Array.from({ length: segments + 1 }, (_, step) => {
-          const arcAngle = startAngle + (sweep * step) / segments;
+        const arcSegments = segments || arcSegmentsForRadius(cornerRadius, sweep);
+        return Array.from({ length: arcSegments + 1 }, (_, step) => {
+          const arcAngle = startAngle + (sweep * step) / arcSegments;
           return [center[0] + cornerRadius * Math.cos(arcAngle), center[1] + cornerRadius * Math.sin(arcAngle)];
         });
       }
@@ -84,11 +93,12 @@
       } else {
         while (sweep > 0) sweep -= 2 * Math.PI;
       }
-      return Array.from({ length: segments + 1 }, (_, step) => {
-        const arcAngle = startAngle + (sweep * step) / segments;
+      const arcSegments = segments || arcSegmentsForRadius(cornerRadius, sweep);
+      return Array.from({ length: arcSegments + 1 }, (_, step) => {
+        const arcAngle = startAngle + (sweep * step) / arcSegments;
         return [center[0] + radius * Math.cos(arcAngle), center[1] + radius * Math.sin(arcAngle)];
       });
     });
   }
-    global.BobbinGeometry = { inwardArchPoints, filletedPolygonPoints };
+    global.BobbinGeometry = { arcSegmentsForRadius, inwardArchPoints, filletedPolygonPoints };
 })(globalThis);

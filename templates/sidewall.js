@@ -1,12 +1,13 @@
 (function (global) {
   global.BobbinPartTemplates = global.BobbinPartTemplates || {};
   global.BobbinPartTemplates.sidewall = function (v, formatNumber, strings) {
-    function cornerRelievedRectanglePoints(x1, y1, x2, y2, radius, segments = 12) {
+    function cornerRelievedRectanglePoints(x1, y1, x2, y2, radius, segments = 0) {
       const r = Math.min(radius, (x2 - x1) / 4, (y2 - y1) / 4);
+      const arcSegments = segments || global.BobbinGeometry.arcSegmentsForRadius(r);
       const points = [[x1 + 2 * r, y1], [x2 - 2 * r, y1]];
       const addArc = (cx, cy, start, end) => {
-        for (let i = 0; i <= segments; i++) {
-          const angle = start + (i / segments) * (end - start);
+        for (let i = 0; i <= arcSegments; i++) {
+          const angle = start + (i / arcSegments) * (end - start);
           points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
         }
       };
@@ -21,27 +22,29 @@
     }
 
     function slottedSideWallProfile(width, bodyHeight, extension, radius, slotWidth, slotStart, slotCenters) {
+      const { arcSegmentsForRadius } = global.BobbinGeometry;
       const x = width / 2;
       const y = bodyHeight / 2;
-      const segments = 8;
       const top = y + extension;
       const r = Math.min(radius, x / 2, top);
       const bottom = -top;
       const points = [[-x + r, bottom]];
       const addArc = (cx, cy, start, end) => {
-        for (let i = 0; i <= segments; i++) {
-          const angle = start + (i / segments) * (end - start);
+        const arcSegments = arcSegmentsForRadius(r, end - start);
+        for (let i = 0; i <= arcSegments; i++) {
+          const angle = start + (i / arcSegments) * (end - start);
           points.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
         }
       };
       for (const center of [...slotCenters].sort((a, b) => a - b)) {
         const slotRadius = slotWidth / 2;
+        const slotSegments = arcSegmentsForRadius(slotRadius);
         points.push(
           [center - slotRadius, bottom],
           [center - slotRadius, -slotStart - slotRadius],
         );
-        for (let i = 0; i <= segments; i++) {
-          const angle = Math.PI - (Math.PI * i) / segments;
+        for (let i = 0; i <= slotSegments; i++) {
+          const angle = Math.PI - (Math.PI * i) / slotSegments;
           points.push([center + slotRadius * Math.cos(angle), -slotStart - slotRadius + slotRadius * Math.sin(angle)]);
         }
         points.push([center + slotRadius, bottom]);
@@ -52,12 +55,13 @@
       addArc(x - r, y + extension - r, 0, Math.PI / 2);
       for (const center of [...slotCenters].sort((a, b) => b - a)) {
         const slotRadius = slotWidth / 2;
+        const slotSegments = arcSegmentsForRadius(slotRadius);
         points.push(
           [center + slotRadius, top],
           [center + slotRadius, slotStart + slotRadius],
         );
-        for (let i = 1; i <= segments; i++) {
-          const angle = -Math.PI * i / segments;
+        for (let i = 1; i <= slotSegments; i++) {
+          const angle = -Math.PI * i / slotSegments;
           points.push([center + slotRadius * Math.cos(angle), slotStart + slotRadius + slotRadius * Math.sin(angle)]);
         }
         points.push([center - slotRadius, top]);
@@ -123,7 +127,7 @@
           from: -sideW / 2,
           to: sideW / 2,
           y: outerHalfHeight + 8,
-          extensionFromY: outerHalfHeight,
+          extensionFromY: outerHalfHeight - outerCornerRadius,
           label: formatNumber(sideW),
           parameterKeys: ["CoreHight", "SheetThickness", "FrameWidth"],
         },
@@ -229,7 +233,8 @@
           label: formatNumber(v.SideWallCornerHoleDistance),
           parameterKeys: ["SideWallCornerHoleDistance"],
           primaryParameterKeys: ["SideWallCornerHoleDistance"],
-          extensionFromY: -outerHalfHeight,
+          extensionFromY1: -outerHalfHeight + outerCornerRadius,
+          extensionFromY2: -cornerHoleY,
         },
         {
           axis: "y",
@@ -239,6 +244,7 @@
           label: formatNumber(v.SideWallCornerHoleDistance),
           parameterKeys: ["SideWallCornerHoleDistance"],
           primaryParameterKeys: ["SideWallCornerHoleDistance"],
+          extensionFromX2: -cornerHoleX,
         },
         {
           leader: {
@@ -257,8 +263,8 @@
           from: wireSlotStart,
           to: outerHalfHeight,
           x: -sideW / 2 - 7,
-          extensionFromX1: firstWireSlotX,
-          extensionFromX2: firstWireSlotX,
+          extensionFromX1: firstWireSlotX - v.TerminalSlotWidth / 2,
+          extensionFromX2: firstWireSlotX - v.TerminalSlotWidth / 2,
           label: formatNumber(wireSlotDepth),
           parameterKeys: ["TerminalSlotHeight"],
           primaryParameterKeys: ["TerminalSlotHeight"],
