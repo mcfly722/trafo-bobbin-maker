@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5
+
+**Dimension chain on the vertical insert drawing**
+
+- **New dimensions on the left side of the vertical insert** — the drawing now shows the full height breakdown: bottom edge offset, protrusion height, and top edge offset.
+- **Single dimension line** — all three dimensions form a chain on one line with the same standoff from the part edge as the overall length dimension, with inward-pointing arrows.
+- The new dimensions are linked to the core length parameter and are highlighted as dependent when hovering over it.
+
 ## v1.4
 
 **DXF export is now compatible with CorelDraw and legacy CAD software**
