@@ -1,7 +1,7 @@
 # Trafo Bobbin Maker
 
 ![Status: done](https://img.shields.io/badge/status-done-success.svg)
-![version](https://img.shields.io/badge/version-1.8-blue)
+![version](https://img.shields.io/badge/version-1.10-blue)
 [![License: GPL3.0](https://img.shields.io/badge/License-GPL3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 An online service for parametric design of a transformer coil bobbin. Set the core, frame, terminal and fastener dimensions — the service builds dimensioned drawings of the parts and generates a DXF file with true-scale cut contours (1:1, millimeters) for laser cutting or milling.
