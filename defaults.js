@@ -5,7 +5,7 @@
     CoreLength: 25,
     FrameWidth: 20,
     SheetThickness: 0,
-    ClearanceMillingCutterRadius: 1,
+    ClearanceMillingCutterDiameter: 2,
     TubeExtSideWallLockHight: 7,
     TubeExtSideWallLockWidth: 7,
     TubeExtSideWallLockRadius: 2,

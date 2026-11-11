@@ -9,6 +9,7 @@
     const edgeNotchLeft = Math.max(v.SheetThickness, 0.1);
     const edgeNotchRight = Math.max(v.TubeExtVerticalLockWidth, 0.1);
     const verticalW = tubeH + edgeNotchLeft + edgeNotchRight;
+    const cutterRadius = v.ClearanceMillingCutterDiameter / 2;
     const verticalOutline = [
       [-halfTube, -verticalL / 2],
       [halfTube, -verticalL / 2],
@@ -23,15 +24,15 @@
       [-halfTube - edgeNotchLeft, -verticalL / 2 + verticalSlotDepth],
       [-halfTube, -verticalL / 2 + verticalSlotDepth],
     ];
-    const verticalOuterRadius = Math.min(v.ClearanceMillingCutterRadius, verticalSlotDepth / 2, tubeH / 2);
-    const verticalSlotRadius = Math.min(v.ClearanceMillingCutterRadius, verticalSlotDepth / 2);
+    const verticalOuterRadius = Math.min(cutterRadius, verticalSlotDepth / 2, tubeH / 2);
+    const verticalSlotRadius = Math.min(cutterRadius, verticalSlotDepth / 2);
     const verticalCornerRadii = Array(verticalOutline.length).fill(0);
     for (const index of [0, 1, 6, 7]) {
       verticalCornerRadii[index] = verticalOuterRadius;
     }
     for (const index of [2, 5, 8, 11]) {
       verticalCornerRadii[index] = {
-        radius: v.ClearanceMillingCutterRadius,
+        radius: cutterRadius,
         inwardArch: true,
       };
     }
@@ -46,8 +47,8 @@
             to: [-halfTube - 8, -verticalL / 2 - 8],
           },
           label: `R${formatNumber(verticalOuterRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         {
           leader: {
@@ -55,8 +56,8 @@
             to: [halfTube - 9, -verticalL / 2 + verticalSlotDepth - 8],
           },
           label: `R${formatNumber(verticalSlotRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         { axis: "x", from: -halfTube, to: halfTube, y: 0, label: formatNumber(tubeH), parameterKeys: ["CoreWidth"], primaryParameterKeys: ["CoreWidth"], labelDy: -3, internal: true },
         { axis: "x", from: -halfTube - edgeNotchLeft, to: halfTube + edgeNotchRight, y: verticalL / 2 + 8, label: formatNumber(verticalW), parameterKeys: ["CoreWidth", "SheetThickness", "TubeExtVerticalLockWidth"], extensionFromY1: verticalL / 2 - verticalSlotDepth, extensionFromY2: verticalL / 2 - verticalSlotDepth },

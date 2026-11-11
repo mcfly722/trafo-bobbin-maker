@@ -10,6 +10,7 @@
     const halfTab = tabWidth / 2;
     const horizontalSlotHalfWidth = v.TubeSlotWidth / 2;
     const horizontalNotchX = v.TubeStackThickness / 2;
+    const cutterRadius = v.ClearanceMillingCutterDiameter / 2;
     const horizontalOutline = [
       [-halfTab, -halfL - v.TubeExtSideWallLockHight],
       [halfTab, -halfL - v.TubeExtSideWallLockHight],
@@ -33,16 +34,16 @@
       [-halfTab, -halfL],
     ];
     const horizontalOuterRadius = Math.min(v.TubeExtSideWallLockRadius, v.TubeExtSideWallLockHight / 2, tabWidth / 4);
-    const horizontalShoulderRadius = Math.min(v.ClearanceMillingCutterRadius, (halfTab - halfW) / 2, v.TubeExtSideWallLockHight / 2);
-    const horizontalNotchRadius = Math.min(v.ClearanceMillingCutterRadius, v.TubeSlotWidth / 2);
-    const horizontalTabArchRadius = Math.min(v.ClearanceMillingCutterRadius, (halfTab - halfW) / 2);
+    const horizontalShoulderRadius = Math.min(cutterRadius, (halfTab - halfW) / 2, v.TubeExtSideWallLockHight / 2);
+    const horizontalNotchRadius = Math.min(cutterRadius, v.TubeSlotWidth / 2);
+    const horizontalTabArchRadius = Math.min(cutterRadius, (halfTab - halfW) / 2);
     const horizontalCornerRadii = [
       horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true }, 0.5,
-      { radius: v.ClearanceMillingCutterRadius, inwardArch: true },
-      { radius: v.ClearanceMillingCutterRadius, inwardArch: true },
+      { radius: cutterRadius, inwardArch: true },
+      { radius: cutterRadius, inwardArch: true },
       0.5, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius, horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true },
-      0.5, { radius: v.ClearanceMillingCutterRadius, inwardArch: true },
-      { radius: v.ClearanceMillingCutterRadius, inwardArch: true },
+      0.5, { radius: cutterRadius, inwardArch: true },
+      { radius: cutterRadius, inwardArch: true },
       0.5, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius,
     ];
     const horizontalContour = filletedPolygonPoints(horizontalOutline, horizontalCornerRadii);
@@ -65,8 +66,8 @@
             to: [halfW + 10, halfL + 8],
           },
           label: `R${formatNumber(horizontalShoulderRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         {
           leader: {
@@ -80,8 +81,8 @@
             ],
           },
           label: `R${formatNumber(horizontalShoulderRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         {
           leader: {
@@ -89,8 +90,8 @@
             to: [horizontalNotchX - 10, -horizontalSlotHalfWidth + 6],
           },
           label: `R${formatNumber(horizontalNotchRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         { axis: "x", from: -halfTab, to: halfTab, y: tubeLengthWithLocks / 2 + 8, label: formatNumber(tabWidth), parameterKeys: ["CoreHight", "SheetThickness", "TubeExtSideWallLockWidth"], extensionFromY1: halfL + v.TubeExtSideWallLockHight - horizontalOuterRadius, extensionFromY2: halfL + v.TubeExtSideWallLockHight - horizontalOuterRadius },
         { axis: "y", from: -tubeLengthWithLocks / 2, to: tubeLengthWithLocks / 2, x: halfTab + 22, label: formatNumber(tubeLengthWithLocks), parameterKeys: ["CoreLength", "TubeExtSideWallLockHight"] },

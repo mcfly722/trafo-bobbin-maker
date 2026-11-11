@@ -84,7 +84,8 @@
     const cornerHoleX = sideW / 2 - v.SideWallCornerHoleDistance;
     const cornerHoleY = outerHalfHeight - v.SideWallCornerHoleDistance;
     const outerCornerRadius = Math.min(v.SideWallCornerFilletRadius, sideW / 4, outerHalfHeight);
-    const innerOpeningRadius = Math.min(v.ClearanceMillingCutterRadius, tubeW / 4, tubeH / 4);
+    const cutterRadius = v.ClearanceMillingCutterDiameter / 2;
+    const innerOpeningRadius = Math.min(cutterRadius, tubeW / 4, tubeH / 4);
     const wireSlotStart = tubeH / 2 + v.FrameWidth;
     const wireSlotDepth = outerHalfHeight - wireSlotStart;
     const wireSlotCenters = [];
@@ -103,7 +104,7 @@
       wireSlotStart,
       wireSlotCenters,
     );
-    const sideHoles = [cornerRelievedRectanglePoints(-tubeW / 2, -tubeH / 2, tubeW / 2, tubeH / 2, v.ClearanceMillingCutterRadius)];
+    const sideHoles = [cornerRelievedRectanglePoints(-tubeW / 2, -tubeH / 2, tubeW / 2, tubeH / 2, cutterRadius)];
     const boltY = sideH / 2 + v.TerminalHoleDiameter / 2;
     for (const sign of [-1, 1]) {
       for (let i = 0; i < v.TerminalSlotCount; i++) {
@@ -207,8 +208,8 @@
             ],
           },
           label: `R${formatNumber(innerOpeningRadius)}`,
-          parameterKeys: ["ClearanceMillingCutterRadius"],
-          primaryParameterKeys: ["ClearanceMillingCutterRadius"],
+          parameterKeys: ["ClearanceMillingCutterDiameter"],
+          primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
         ...(v.TerminalSlotCount >= 1 ? [{
           leader: {

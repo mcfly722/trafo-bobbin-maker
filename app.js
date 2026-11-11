@@ -1,10 +1,10 @@
 const PARAMS = [
   { key: "SheetThickness", group: "material", min: 0.01, step: 0.1 },
+  { key: "ClearanceMillingCutterDiameter", group: "clearances", min: 0, step: 0.1 },
   { key: "CoreWidth", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreHight", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreLength", group: "core", min: 0.01, step: 0.1 },
   { key: "FrameWidth", group: "frame", min: 0.01, step: 0.1 },
-  { key: "ClearanceMillingCutterRadius", group: "clearances", min: 0, step: 0.1 },
   { key: "TubeExtSideWallLockHight", group: "protrusions", min: 0, step: 0.1 },
   { key: "TubeExtSideWallLockWidth", group: "protrusions", min: 0, step: 0.1 },
   { key: "TubeExtSideWallLockRadius", group: "protrusions", min: 0, step: 0.1 },
@@ -20,7 +20,7 @@ const PARAMS = [
 ];
 
 const LEGACY_KEYS = {
-  ClearanceMillingCutter: "ClearanceMillingCutterRadius",
+  ClearanceMillingCutter: "ClearanceMillingCutterDiameter",
   SideWallExtWireTerm: "TerminalSlotHeight",
   WireSlotWidth: "TerminalSlotWidth",
   WireSlotCnt: "TerminalSlotCount",
@@ -137,14 +137,23 @@ function readValues() {
     errors.push({ keys: ["CoreLength"], text: t("error.positiveSlotWidth") });
   }
   const sideWallWidth = values.TubeStackThickness + 2 * values.SheetThickness + 2 * values.FrameWidth;
-  if (values.TubeSlotWidth >= values.TubeLength || values.TubeSlotWidth <= 2 * values.ClearanceMillingCutterRadius) {
-    errors.push({ keys: ["ClearanceMillingCutterRadius", "CoreLength"], text: t("error.slotVsCutter") });
+  if (values.TubeSlotWidth >= values.TubeLength || values.TubeSlotWidth <= values.ClearanceMillingCutterDiameter) {
+    errors.push({ keys: ["ClearanceMillingCutterDiameter", "CoreLength"], text: t("error.slotVsCutter") });
   }
-  if (values.ClearanceMillingCutterRadius + values.TubeExtSideWallLockRadius > values.TubeExtSideWallLockHight) {
-    errors.push({ keys: ["TubeExtSideWallLockHight", "TubeExtSideWallLockRadius", "ClearanceMillingCutterRadius"], text: t("error.lockRadiusTooBig") });
+  if (values.ClearanceMillingCutterDiameter / 2 + values.TubeExtSideWallLockRadius > values.TubeExtSideWallLockHight) {
+    errors.push({ keys: ["TubeExtSideWallLockHight", "TubeExtSideWallLockRadius", "ClearanceMillingCutterDiameter"], text: t("error.lockRadiusTooBig") });
   }
-  if (3 * values.ClearanceMillingCutterRadius > values.TubeExtSideWallLockWidth) {
-    errors.push({ keys: ["TubeExtSideWallLockWidth", "ClearanceMillingCutterRadius"], text: t("error.lockWidthTooSmall") });
+  if (3 * (values.ClearanceMillingCutterDiameter / 2) > values.TubeExtSideWallLockWidth) {
+    errors.push({ keys: ["TubeExtSideWallLockWidth", "ClearanceMillingCutterDiameter"], text: t("error.lockWidthTooSmall") });
+  }
+  if (values.TerminalHoleDiameter < values.ClearanceMillingCutterDiameter) {
+    errors.push({ keys: ["TerminalHoleDiameter", "ClearanceMillingCutterDiameter"], text: t("error.holeDiameterVsCutter") });
+  }
+  if (values.SideWallCornerHoleDiameter < values.ClearanceMillingCutterDiameter) {
+    errors.push({ keys: ["SideWallCornerHoleDiameter", "ClearanceMillingCutterDiameter"], text: t("error.holeDiameterVsCutter") });
+  }
+  if (values.TerminalSlotWidth > 0 && values.TerminalSlotWidth < values.ClearanceMillingCutterDiameter) {
+    errors.push({ keys: ["TerminalSlotWidth", "ClearanceMillingCutterDiameter"], text: t("error.slotWidthVsCutter") });
   }
   const tubeH = values.TubeRibbonWidth + 2 * values.SheetThickness;
   const sideWallHeight = tubeH + 2 * values.FrameWidth;
@@ -265,11 +274,24 @@ function pathFromPoints(points, close = true) {
 }
 
 function buildPartModels(values) {
-  return [
+  const models = [
     BobbinPartTemplates.sidewall(values, formatDimension, strings),
     BobbinPartTemplates.horizontal(values, formatDimension, strings),
     BobbinPartTemplates.vertical(values, formatDimension, strings),
   ];
+  const cutterRadius = values.ClearanceMillingCutterDiameter / 2;
+  if (cutterRadius > 0) {
+    for (const model of models) {
+      const toolpaths = model.geometry.contours.map((contour, index) =>
+        BobbinGeometry.offsetContourPoints(contour, index === 0 ? cutterRadius : -cutterRadius));
+      for (const circle of model.geometry.circles) {
+        const pathRadius = circle.r - cutterRadius;
+        if (pathRadius > 0) toolpaths.push(BobbinGeometry.circleContourPoints(circle.x, circle.y, pathRadius));
+      }
+      model.geometry.toolpaths = toolpaths;
+    }
+  }
+  return models;
 }
 
 function svgElement(name, attrs = {}, text = "") {
@@ -550,6 +572,16 @@ function renderPartSvg(model) {
       "stroke-dasharray": `${formatNumber(2 * unit)} ${formatNumber(1.2 * unit)}`,
     }));
   }
+  for (const toolpath of geometry.toolpaths || []) {
+    const path = pathFromPoints(toolpath.map(([x, y]) => screenPoint(x, y, b)));
+    svg.append(svgElement("path", {
+      d: path,
+      fill: "none",
+      stroke: "#d32f2f",
+      "stroke-width": 1,
+      "vector-effect": "non-scaling-stroke",
+    }));
+  }
   for (const dimension of model.dimensions) renderDimension(svg, dimension, b, unit, geometry.contours);
   let dragState = null;
   svg.addEventListener("pointerdown", (event) => {
@@ -795,12 +827,15 @@ function generateDxf(models, version) {
   const isR12 = version === "AC1009";
   for (const model of models) {
     const { geometry } = model;
-    const points = [...geometry.contours];
-    for (const circle of geometry.circles) {
-      points.push([
-        [circle.x - circle.r, circle.y - circle.r],
-        [circle.x + circle.r, circle.y + circle.r],
-      ]);
+    const exportContours = geometry.toolpaths || geometry.contours;
+    const points = [...exportContours];
+    if (!geometry.toolpaths) {
+      for (const circle of geometry.circles) {
+        points.push([
+          [circle.x - circle.r, circle.y - circle.r],
+          [circle.x + circle.r, circle.y + circle.r],
+        ]);
+      }
     }
     const xs = points.flatMap((contour) => contour.map(([x]) => x));
     const ys = points.flatMap((contour) => contour.map(([, y]) => y));
@@ -814,24 +849,26 @@ function generateDxf(models, version) {
       const dx = shiftX + copy * (maxX - minX + gap);
       drawingMaxX = Math.max(drawingMaxX, maxX + dx);
       drawingMaxY = Math.max(drawingMaxY, maxY + yOffset - minY);
-      for (const contour of geometry.contours) {
+      for (const contour of exportContours) {
         const points = contour.map(([x, y]) => [x + dx, y + yOffset - minY]);
         entities.push(isR12 ? addDxfPolylineR12(points) : addDxfPolyline(points, "9", nextHandle));
       }
-      for (const circle of geometry.circles) {
-        entities.push(isR12 ? [
-          "0", "CIRCLE", "8", "CUT",
-          "10", formatNumber(circle.x + dx),
-          "20", formatNumber(circle.y + yOffset - minY),
-          "30", "0", "40", formatNumber(circle.r),
-        ] : [
-          "0", "CIRCLE", "5", nextHandle(), "330", "9",
-          "100", "AcDbEntity", "8", "CUT", "370", "0",
-          "100", "AcDbCircle",
-          "10", formatNumber(circle.x + dx),
-          "20", formatNumber(circle.y + yOffset - minY),
-          "30", "0", "40", formatNumber(circle.r),
-        ]);
+      if (!geometry.toolpaths) {
+        for (const circle of geometry.circles) {
+          entities.push(isR12 ? [
+            "0", "CIRCLE", "8", "CUT",
+            "10", formatNumber(circle.x + dx),
+            "20", formatNumber(circle.y + yOffset - minY),
+            "30", "0", "40", formatNumber(circle.r),
+          ] : [
+            "0", "CIRCLE", "5", nextHandle(), "330", "9",
+            "100", "AcDbEntity", "8", "CUT", "370", "0",
+            "100", "AcDbCircle",
+            "10", formatNumber(circle.x + dx),
+            "20", formatNumber(circle.y + yOffset - minY),
+            "30", "0", "40", formatNumber(circle.r),
+          ]);
+        }
       }
     }
     yOffset += rowHeight + gap;

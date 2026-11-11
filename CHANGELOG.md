@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9
+
+**Milling cutter toolpath: the drawings show the cutter center path in red, and DXF exports exactly that path**
+
+- **Cutter parameter is now a diameter** — the former "milling cutter radius" parameter became `ClearanceMillingCutterDiameter` (default 2 mm), and the "Clearances and compensation" group moved up right under "Material". Old shared links with `ClearanceMillingCutter` still load.
+- **New validations** — hole diameters and the terminal slot width can no longer be smaller than the cutter diameter.
+- **Red cutter center toolpath on every drawing** — the cut contours are offset by the cutter radius (outward for outer contours, inward for holes and windows) and drawn as a red line. At pocket corners (lock slot corners, corner relief arches) the path plunges to the corner point and retracts along the very same line before turning, so sharp corners are cut completely without arc moves.
+- **DXF export now contains the toolpath itself** — the exported polylines are the cutter center path (including the plunge-retract corner moves), not the raw part outline; round holes become center-path polylines of radius `hole radius − cutter radius`. With the cutter diameter set to 0 the export falls back to the plain part contours.
+- **Fixed a self-intersecting part contour** — a fillet arc was drawn with the unclamped radius while its tangent points used the clamped one, bulging outward on narrow edges (e.g. with sheet thickness above zero).
+
 ## v1.8
 
 **Dimension extension lines always reach the part, and arcs stay smooth at any zoom**
