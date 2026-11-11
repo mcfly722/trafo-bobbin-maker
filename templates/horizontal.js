@@ -38,13 +38,13 @@
     const horizontalNotchRadius = Math.min(cutterRadius, v.TubeSlotWidth / 2);
     const horizontalTabArchRadius = Math.min(cutterRadius, (halfTab - halfW) / 2);
     const horizontalCornerRadii = [
-      horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true }, 0.5,
+      horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true }, 0,
       { radius: cutterRadius, inwardArch: true },
       { radius: cutterRadius, inwardArch: true },
-      0.5, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius, horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true },
-      0.5, { radius: cutterRadius, inwardArch: true },
+      0, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius, horizontalOuterRadius, horizontalOuterRadius, horizontalShoulderRadius, { radius: horizontalTabArchRadius, arch: true },
+      0, { radius: cutterRadius, inwardArch: true },
       { radius: cutterRadius, inwardArch: true },
-      0.5, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius,
+      0, { radius: horizontalTabArchRadius, arch: true }, horizontalShoulderRadius,
     ];
     const horizontalContour = filletedPolygonPoints(horizontalOutline, horizontalCornerRadii);
     const dimensions = [

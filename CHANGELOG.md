@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.10
+
+**Sharp lock slot mouth corners on the horizontal insert**
+
+- **Removed the 0.5 mm fillet at the lock slot mouth** — the corners where the tube wall steps into the lock slot (`TubeSlotWidth`) are now sharp on the part contour, and the cutter toolpath turns there at a sharp miter instead of rounding.
+
 ## v1.9
 
 **Milling cutter toolpath: the drawings show the cutter center path in red, and DXF exports exactly that path**
