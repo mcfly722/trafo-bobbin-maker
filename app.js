@@ -13,8 +13,8 @@ const PARAMS = [
   { key: "TerminalSlotWidth", group: "terminals", min: 0, step: 0.1 },
   { key: "TerminalSlotCount", group: "terminals", min: 0, step: 1 },
   { key: "TerminalSlotPitch", group: "terminals", min: 0.01, step: 0.1 },
-  { key: "TerminalHoleDiameter", group: "terminals", min: 0.01, step: 0.1 },
-  { key: "SideWallCornerHoleDiameter", group: "fasteners", min: 0.01, step: 0.1 },
+  { key: "TerminalHoleDiameter", group: "terminals", min: 0, step: 0.1 },
+  { key: "SideWallCornerHoleDiameter", group: "fasteners", min: 0, step: 0.1 },
   { key: "SideWallCornerHoleDistance", group: "fasteners", min: 0, step: 0.1 },
   { key: "SideWallCornerFilletRadius", group: "fasteners", min: 0, step: 0.1 },
 ];
@@ -146,14 +146,20 @@ function readValues() {
   if (3 * (values.ClearanceMillingCutterDiameter / 2) > values.TubeExtSideWallLockWidth) {
     errors.push({ keys: ["TubeExtSideWallLockWidth", "ClearanceMillingCutterDiameter"], text: t("error.lockWidthTooSmall") });
   }
-  if (values.TerminalHoleDiameter < values.ClearanceMillingCutterDiameter) {
+  if (values.TerminalHoleDiameter > 0 && values.TerminalHoleDiameter < values.ClearanceMillingCutterDiameter) {
     errors.push({ keys: ["TerminalHoleDiameter", "ClearanceMillingCutterDiameter"], text: t("error.holeDiameterVsCutter") });
   }
-  if (values.SideWallCornerHoleDiameter < values.ClearanceMillingCutterDiameter) {
+  if (values.SideWallCornerHoleDiameter > 0 && values.SideWallCornerHoleDiameter < values.ClearanceMillingCutterDiameter) {
     errors.push({ keys: ["SideWallCornerHoleDiameter", "ClearanceMillingCutterDiameter"], text: t("error.holeDiameterVsCutter") });
   }
   if (values.TerminalSlotWidth > 0 && values.TerminalSlotWidth < values.ClearanceMillingCutterDiameter) {
     errors.push({ keys: ["TerminalSlotWidth", "ClearanceMillingCutterDiameter"], text: t("error.slotWidthVsCutter") });
+  }
+  if (values.TerminalHoleDiameter > values.TerminalSlotHeight) {
+    errors.push({ keys: ["TerminalHoleDiameter", "TerminalSlotHeight"], text: t("error.holeDiameterVsSlotHeight") });
+  }
+  if (values.TerminalSlotWidth > values.TerminalSlotPitch) {
+    errors.push({ keys: ["TerminalSlotWidth", "TerminalSlotPitch"], text: t("error.slotWidthVsPitch") });
   }
   const tubeH = values.TubeRibbonWidth + 2 * values.SheetThickness;
   const sideWallHeight = tubeH + 2 * values.FrameWidth;
@@ -172,12 +178,12 @@ function readValues() {
       wireSlotHalfSpan + values.TerminalSlotWidth / 2 >= outerCornerX ||
       wireSlotHalfSpan + values.TerminalSlotWidth / 2 >= sideWallHeight / 2 + values.TerminalSlotHeight
     )) ||
-    farthestBoltHole >= sideWallWidth / 2
+    (values.TerminalHoleDiameter > 0 && farthestBoltHole >= sideWallWidth / 2)
   ) {
     errors.push({ keys: ["TerminalSlotCount", "TerminalSlotPitch"], text: t("error.rowsTooWide") });
   }
   let cornerHoleConflict = false;
-  for (const xSign of [-1, 1]) {
+  for (const xSign of values.SideWallCornerHoleDiameter > 0 ? [-1, 1] : []) {
     for (const ySign of [-1, 1]) {
       const x = xSign * cornerHoleX;
       const y = ySign * cornerHoleY;
@@ -187,7 +193,7 @@ function readValues() {
         cornerHoleConflict = true;
         break;
       }
-      for (const yBoltSign of [-1, 1]) {
+      for (const yBoltSign of values.TerminalHoleDiameter > 0 ? [-1, 1] : []) {
         for (let i = 0; i < values.TerminalSlotCount; i++) {
           const boltX = (i - (values.TerminalSlotCount - 1) / 2) * values.TerminalSlotPitch;
           const boltY = yBoltSign * (sideWallHeight / 2 + values.TerminalHoleDiameter / 2);

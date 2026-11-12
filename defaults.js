@@ -4,7 +4,7 @@
     CoreHight: 32,
     CoreLength: 25,
     FrameWidth: 20,
-    SheetThickness: 0,
+    SheetThickness: 1,
     ClearanceMillingCutterDiameter: 2,
     TubeExtSideWallLockHight: 7,
     TubeExtSideWallLockWidth: 7,

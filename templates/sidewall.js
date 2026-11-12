@@ -106,20 +106,24 @@
     );
     const sideHoles = [cornerRelievedRectanglePoints(-tubeW / 2, -tubeH / 2, tubeW / 2, tubeH / 2, cutterRadius)];
     const boltY = sideH / 2 + v.TerminalHoleDiameter / 2;
-    for (const sign of [-1, 1]) {
-      for (let i = 0; i < v.TerminalSlotCount; i++) {
-        const x = (i - (v.TerminalSlotCount - 1) / 2) * v.TerminalSlotPitch;
-        sideHoles.push({ circle: true, x, y: sign * boltY, r: v.TerminalHoleDiameter / 2 });
+    if (v.TerminalHoleDiameter > 0) {
+      for (const sign of [-1, 1]) {
+        for (let i = 0; i < v.TerminalSlotCount; i++) {
+          const x = (i - (v.TerminalSlotCount - 1) / 2) * v.TerminalSlotPitch;
+          sideHoles.push({ circle: true, x, y: sign * boltY, r: v.TerminalHoleDiameter / 2 });
+        }
       }
     }
-    for (const xSign of [-1, 1]) {
-      for (const ySign of [-1, 1]) {
-        sideHoles.push({
-          circle: true,
-          x: xSign * cornerHoleX,
-          y: ySign * cornerHoleY,
-          r: v.SideWallCornerHoleDiameter / 2,
-        });
+    if (v.SideWallCornerHoleDiameter > 0) {
+      for (const xSign of [-1, 1]) {
+        for (const ySign of [-1, 1]) {
+          sideHoles.push({
+            circle: true,
+            x: xSign * cornerHoleX,
+            y: ySign * cornerHoleY,
+            r: v.SideWallCornerHoleDiameter / 2,
+          });
+        }
       }
     }
     const dimensions = [
@@ -132,7 +136,7 @@
           label: formatNumber(sideW),
           parameterKeys: ["CoreHight", "SheetThickness", "FrameWidth"],
         },
-        { axis: "y", from: -(sideH / 2 + v.TerminalSlotHeight), to: sideH / 2 + v.TerminalSlotHeight, x: sideW / 2 + 17, label: formatNumber(sideH + 2 * v.TerminalSlotHeight), parameterKeys: ["CoreWidth", "SheetThickness", "FrameWidth", "TerminalSlotHeight"] },
+        { axis: "y", from: -(sideH / 2 + v.TerminalSlotHeight), to: sideH / 2 + v.TerminalSlotHeight, x: sideW / 2 + 8, label: formatNumber(sideH + 2 * v.TerminalSlotHeight), parameterKeys: ["CoreWidth", "SheetThickness", "FrameWidth", "TerminalSlotHeight"] },
         {
           axis: "x",
           from: -tubeW / 2,
@@ -211,7 +215,7 @@
           parameterKeys: ["ClearanceMillingCutterDiameter"],
           primaryParameterKeys: ["ClearanceMillingCutterDiameter"],
         },
-        ...(v.TerminalSlotCount >= 1 ? [{
+        ...(v.TerminalHoleDiameter > 0 && v.TerminalSlotCount >= 1 ? [{
           leader: {
             from: [
               (v.TerminalSlotCount - 1) * v.TerminalSlotPitch / 2 + v.TerminalHoleDiameter / (2 * Math.SQRT2),
@@ -226,7 +230,7 @@
           parameterKeys: ["TerminalHoleDiameter"],
           primaryParameterKeys: ["TerminalHoleDiameter"],
         }] : []),
-        {
+        ...(v.SideWallCornerHoleDiameter > 0 ? [{
           axis: "x",
           from: -sideW / 2,
           to: -cornerHoleX,
@@ -258,7 +262,7 @@
           label: `Ø${formatNumber(v.SideWallCornerHoleDiameter)}`,
           parameterKeys: ["SideWallCornerHoleDiameter"],
           primaryParameterKeys: ["SideWallCornerHoleDiameter"],
-        },
+        }] : []),
         ...(v.TerminalSlotWidth > 0 && v.TerminalSlotCount >= 2 ? [{
           axis: "y",
           from: wireSlotStart,
