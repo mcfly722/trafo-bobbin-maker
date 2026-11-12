@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.11
+
+**Holding tabs (bridges) keep the parts attached to the sheet during milling**
+
+- **New "Holding tabs" parameter group** — the `HoldingTabWidth` parameter (default 1 mm) sets the width of the bridges that are left uncut so the milled parts stay attached to the sheet and do not move under the cutter. Set it to 0 to cut the parts out completely.
+- **Tab placement on every part** — the horizontal insert gets two tabs on the tube lock tips, the vertical insert two tabs on the top and bottom edges, and the sidewall four tabs: two on the side edges and two on the tube hole edge.
+- **Toolpath split around the tabs** — the red cutter center path and the DXF export are broken into open segments at the tab positions: the cutter skips a gap of `tab width + cutter diameter`, leaving the bridge material in place.
+
 ## v1.10
 
 **Sharp lock slot mouth corners on the horizontal insert**

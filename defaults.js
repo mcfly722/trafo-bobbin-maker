@@ -6,6 +6,7 @@
     FrameWidth: 20,
     SheetThickness: 1,
     ClearanceMillingCutterDiameter: 2,
+    HoldingTabWidth: 1,
     TubeExtSideWallLockHight: 7,
     TubeExtSideWallLockWidth: 7,
     TubeExtSideWallLockRadius: 2,

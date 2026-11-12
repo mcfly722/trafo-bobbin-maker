@@ -254,5 +254,95 @@
     return result;
   }
 
-    global.BobbinGeometry = { arcSegmentsForRadius, inwardArchPoints, filletedPolygonPoints, circleContourPoints, offsetContourPoints };
+  function splitContourWithTabs(points, tabPoints, tabWidth) {
+    const contour = points.map((point) => [...point]);
+    if (!(tabWidth > 0) || !tabPoints || !tabPoints.length || contour.length < 2) return [contour];
+    const count = contour.length;
+    const segmentLengths = [];
+    let totalLength = 0;
+    for (let index = 0; index < count; index++) {
+      const a = contour[index];
+      const b = contour[(index + 1) % count];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      segmentLengths.push(length);
+      totalLength += length;
+    }
+    if (!(totalLength > 0) || tabWidth >= totalLength) return [contour];
+    const pointAt = (arcLength) => {
+      let cursor = 0;
+      for (let index = 0; index < count; index++) {
+        const length = segmentLengths[index];
+        if (arcLength <= cursor + length || index === count - 1) {
+          const a = contour[index];
+          const b = contour[(index + 1) % count];
+          const t = length > 0 ? Math.min(Math.max((arcLength - cursor) / length, 0), 1) : 0;
+          return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+        }
+        cursor += length;
+      }
+      return [...contour[0]];
+    };
+    const halfWidth = tabWidth / 2;
+    const gaps = [];
+    for (const tabPoint of tabPoints) {
+      let best = null;
+      let cursor = 0;
+      for (let index = 0; index < count; index++) {
+        const a = contour[index];
+        const b = contour[(index + 1) % count];
+        const length = segmentLengths[index];
+        if (length > 0) {
+          const dx = b[0] - a[0];
+          const dy = b[1] - a[1];
+          const t = Math.min(Math.max(((tabPoint[0] - a[0]) * dx + (tabPoint[1] - a[1]) * dy) / (length * length), 0), 1);
+          const distance = Math.hypot(tabPoint[0] - (a[0] + t * dx), tabPoint[1] - (a[1] + t * dy));
+          if (!best || distance < best.distance) best = { distance, arcLength: cursor + t * length };
+        }
+        cursor += length;
+      }
+      if (best) gaps.push([best.arcLength - halfWidth, best.arcLength + halfWidth]);
+    }
+    if (!gaps.length) return [contour];
+    const normalized = [];
+    for (const [start, end] of gaps) {
+      if (start < 0) {
+        normalized.push([0, end], [start + totalLength, totalLength]);
+      } else if (end > totalLength) {
+        normalized.push([start, totalLength], [0, end - totalLength]);
+      } else {
+        normalized.push([start, end]);
+      }
+    }
+    normalized.sort((a, b) => a[0] - b[0]);
+    const merged = [];
+    for (const gap of normalized) {
+      const last = merged[merged.length - 1];
+      if (last && gap[0] <= last[1]) last[1] = Math.max(last[1], gap[1]);
+      else merged.push([...gap]);
+    }
+    const kept = [];
+    let cursor = 0;
+    for (const [start, end] of merged) {
+      if (start - cursor > 1e-9) kept.push([cursor, start]);
+      cursor = Math.max(cursor, end);
+    }
+    if (totalLength - cursor > 1e-9) kept.push([cursor, totalLength]);
+    const segments = kept.map(([start, end]) => {
+      const segment = [pointAt(start)];
+      let arcCursor = 0;
+      for (let index = 0; index < count; index++) {
+        arcCursor += segmentLengths[index];
+        if (arcCursor > start && arcCursor < end) segment.push([...contour[(index + 1) % count]]);
+      }
+      segment.push(pointAt(end));
+      return segment;
+    });
+    if (segments.length > 1 && kept[0][0] === 0 && kept[kept.length - 1][1] === totalLength) {
+      const tail = segments.pop();
+      segments[0] = [...tail, ...segments[0].slice(1)];
+    }
+    return segments;
+  }
+
+    global.BobbinGeometry = { arcSegmentsForRadius, inwardArchPoints, filletedPolygonPoints, circleContourPoints, offsetContourPoints, splitContourWithTabs };
 })(globalThis);

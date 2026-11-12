@@ -303,6 +303,12 @@
         stroke: "#2e8b57",
       }],
       circles: sideHoles.filter((hole) => hole.circle),
+      tabs: [
+        { x: -sideW / 2, y: 0, contour: 0 },
+        { x: sideW / 2, y: 0, contour: 0 },
+        { x: 0, y: -tubeH / 2, contour: 1 },
+        { x: 0, y: tubeH / 2, contour: 1 },
+      ],
       viewBounds: { minX: -sideW / 2 - 28, maxX: sideW / 2 + 36, minY: -sideH / 2 - v.TerminalSlotHeight - 24, maxY: sideH / 2 + v.TerminalSlotHeight + 14 },
     };
     return {

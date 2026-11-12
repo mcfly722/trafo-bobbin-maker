@@ -136,6 +136,10 @@
         stroke: "#2e8b57",
       }],
       circles: [],
+      tabs: [
+        { x: 0, y: -verticalL / 2, contour: 0 },
+        { x: 0, y: verticalL / 2, contour: 0 },
+      ],
       viewBounds: { minX: -halfTube - edgeNotchLeft - 18, maxX: halfTube + edgeNotchRight + 20, minY: -verticalL / 2 - 21, maxY: verticalL / 2 + 20 },
     };
     return {

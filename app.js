@@ -1,6 +1,7 @@
 const PARAMS = [
   { key: "SheetThickness", group: "material", min: 0.01, step: 0.1 },
   { key: "ClearanceMillingCutterDiameter", group: "clearances", min: 0, step: 0.1 },
+  { key: "HoldingTabWidth", group: "tabs", min: 0, step: 0.1 },
   { key: "CoreWidth", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreHight", group: "core", min: 0.01, step: 0.1 },
   { key: "CoreLength", group: "core", min: 0.01, step: 0.1 },
@@ -288,11 +289,24 @@ function buildPartModels(values) {
   const cutterRadius = values.ClearanceMillingCutterDiameter / 2;
   if (cutterRadius > 0) {
     for (const model of models) {
-      const toolpaths = model.geometry.contours.map((contour, index) =>
-        BobbinGeometry.offsetContourPoints(contour, index === 0 ? cutterRadius : -cutterRadius));
+      const toolpaths = [];
+      model.geometry.contours.forEach((contour, index) => {
+        const toolpath = BobbinGeometry.offsetContourPoints(contour, index === 0 ? cutterRadius : -cutterRadius);
+        const tabPoints = (model.geometry.tabs || [])
+          .filter((tab) => tab.contour === index)
+          .map((tab) => [tab.x, tab.y]);
+        if (values.HoldingTabWidth > 0 && tabPoints.length) {
+          const tabGapWidth = values.HoldingTabWidth + values.ClearanceMillingCutterDiameter;
+          for (const segment of BobbinGeometry.splitContourWithTabs(toolpath, tabPoints, tabGapWidth)) {
+            toolpaths.push({ points: segment, closed: false });
+          }
+        } else {
+          toolpaths.push({ points: toolpath, closed: true });
+        }
+      });
       for (const circle of model.geometry.circles) {
         const pathRadius = circle.r - cutterRadius;
-        if (pathRadius > 0) toolpaths.push(BobbinGeometry.circleContourPoints(circle.x, circle.y, pathRadius));
+        if (pathRadius > 0) toolpaths.push({ points: BobbinGeometry.circleContourPoints(circle.x, circle.y, pathRadius), closed: true });
       }
       model.geometry.toolpaths = toolpaths;
     }
@@ -579,7 +593,7 @@ function renderPartSvg(model) {
     }));
   }
   for (const toolpath of geometry.toolpaths || []) {
-    const path = pathFromPoints(toolpath.map(([x, y]) => screenPoint(x, y, b)));
+    const path = pathFromPoints(toolpath.points.map(([x, y]) => screenPoint(x, y, b)), toolpath.closed);
     svg.append(svgElement("path", {
       d: path,
       fill: "none",
@@ -783,12 +797,12 @@ function cleanPolylinePoints(points) {
   return clean;
 }
 
-function addDxfPolyline(points, ownerHandle, nextHandle) {
+function addDxfPolyline(points, ownerHandle, nextHandle, closed = true) {
   const clean = cleanPolylinePoints(points);
   const entries = [
     "0", "POLYLINE", "5", nextHandle(), "330", ownerHandle,
     "100", "AcDbEntity", "8", "CUT", "370", "0",
-    "100", "AcDb2dPolyline", "66", "1", "70", "1",
+    "100", "AcDb2dPolyline", "66", "1", "70", closed ? "1" : "0",
     "10", "0", "20", "0", "30", "0",
   ];
   for (const [x, y] of clean) {
@@ -806,10 +820,10 @@ function addDxfPolyline(points, ownerHandle, nextHandle) {
   return entries;
 }
 
-function addDxfPolylineR12(points) {
+function addDxfPolylineR12(points, closed = true) {
   const clean = cleanPolylinePoints(points);
   const entries = [
-    "0", "POLYLINE", "8", "CUT", "66", "1", "70", "1", "40", "0", "41", "0",
+    "0", "POLYLINE", "8", "CUT", "66", "1", "70", closed ? "1" : "0", "40", "0", "41", "0",
     "10", "0", "20", "0", "30", "0",
   ];
   for (const [x, y] of clean) {
@@ -833,8 +847,9 @@ function generateDxf(models, version) {
   const isR12 = version === "AC1009";
   for (const model of models) {
     const { geometry } = model;
-    const exportContours = geometry.toolpaths || geometry.contours;
-    const points = [...exportContours];
+    const exportContours = geometry.toolpaths
+      || geometry.contours.map((contour) => ({ points: contour, closed: true }));
+    const points = exportContours.map((contour) => contour.points);
     if (!geometry.toolpaths) {
       for (const circle of geometry.circles) {
         points.push([
@@ -856,8 +871,8 @@ function generateDxf(models, version) {
       drawingMaxX = Math.max(drawingMaxX, maxX + dx);
       drawingMaxY = Math.max(drawingMaxY, maxY + yOffset - minY);
       for (const contour of exportContours) {
-        const points = contour.map(([x, y]) => [x + dx, y + yOffset - minY]);
-        entities.push(isR12 ? addDxfPolylineR12(points) : addDxfPolyline(points, "9", nextHandle));
+        const points = contour.points.map(([x, y]) => [x + dx, y + yOffset - minY]);
+        entities.push(isR12 ? addDxfPolylineR12(points, contour.closed) : addDxfPolyline(points, "9", nextHandle, contour.closed));
       }
       if (!geometry.toolpaths) {
         for (const circle of geometry.circles) {

@@ -175,6 +175,10 @@
         stroke: "#2e8b57",
       }],
       circles: [],
+      tabs: [
+        { x: 0, y: -halfL - v.TubeExtSideWallLockHight, contour: 0 },
+        { x: 0, y: halfL + v.TubeExtSideWallLockHight, contour: 0 },
+      ],
       viewBounds: { minX: -halfTab - 24, maxX: halfTab + 42, minY: -tubeLengthWithLocks / 2 - 25, maxY: tubeLengthWithLocks / 2 + 20 },
     };
     return {
