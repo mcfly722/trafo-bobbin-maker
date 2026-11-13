@@ -107,6 +107,21 @@ input {
   background: rgb(255 255 255 / 10%);
 }
 
+.mode-button {
+  min-height: 46px;
+  padding: 0 14px;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 7px;
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mode-button:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
 main {
   display: grid;
   grid-template-columns: minmax(310px, 390px) minmax(0, 1fr);

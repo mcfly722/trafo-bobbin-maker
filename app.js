@@ -43,6 +43,7 @@ const fields = $("#parameter-fields");
 const partTabs = $("#part-tabs");
 const drawingDetail = $("#drawing-detail");
 let activePartKey = "sidewall";
+let exportMode = "part";
 let focusedParameterKey = null;
 let hoveredParameterKey = null;
 let lastChangedParameterKey = null;
@@ -92,6 +93,7 @@ function applyLanguage() {
   $("#site-title").textContent = t("header.title");
   $("#source-link").textContent = t("header.sourceLink");
   $("#export-dxf").options[0].textContent = t("header.export");
+  $("#export-mode-toggle").textContent = t(exportMode === "part" ? "header.exportModeContour" : "header.exportModeToolpath");
   $("#parameters-heading").textContent = t("params.heading");
   $("#reset").textContent = t("params.reset");
   $("#share-note").textContent = t("params.shareNote");
@@ -551,6 +553,9 @@ fields.addEventListener("pointerout", (event) => {
 
 function renderPartSvg(model) {
   const { geometry } = model;
+  const toolpathSelected = exportMode === "toolpath" && Boolean(geometry.toolpaths);
+  const partContourColor = toolpathSelected ? "#25394a" : "#d32f2f";
+  const toolpathColor = toolpathSelected ? "#d32f2f" : "#1565c0";
   const b = geometry.viewBounds;
   const width = b.maxX - b.minX;
   const height = b.maxY - b.minY;
@@ -567,7 +572,7 @@ function renderPartSvg(model) {
   svg.append(svgElement("rect", { x: 0, y: 0, width, height, fill: "#fff" }));
   const parts = svgElement("g", {
     fill: "#e9edf0",
-    stroke: "#25394a",
+    stroke: partContourColor,
     "stroke-width": 1.5,
     "stroke-linejoin": "round",
     "stroke-linecap": "round",
@@ -597,7 +602,7 @@ function renderPartSvg(model) {
     svg.append(svgElement("path", {
       d: path,
       fill: "none",
-      stroke: "#d32f2f",
+      stroke: toolpathColor,
       "stroke-width": 1,
       "vector-effect": "non-scaling-stroke",
     }));
@@ -847,10 +852,12 @@ function generateDxf(models, version) {
   const isR12 = version === "AC1009";
   for (const model of models) {
     const { geometry } = model;
-    const exportContours = geometry.toolpaths
-      || geometry.contours.map((contour) => ({ points: contour, closed: true }));
+    const useToolpaths = exportMode === "toolpath" && Boolean(geometry.toolpaths);
+    const exportContours = useToolpaths
+      ? geometry.toolpaths
+      : geometry.contours.map((contour) => ({ points: contour, closed: true }));
     const points = exportContours.map((contour) => contour.points);
-    if (!geometry.toolpaths) {
+    if (!useToolpaths) {
       for (const circle of geometry.circles) {
         points.push([
           [circle.x - circle.r, circle.y - circle.r],
@@ -874,7 +881,7 @@ function generateDxf(models, version) {
         const points = contour.points.map(([x, y]) => [x + dx, y + yOffset - minY]);
         entities.push(isR12 ? addDxfPolylineR12(points, contour.closed) : addDxfPolyline(points, "9", nextHandle, contour.closed));
       }
-      if (!geometry.toolpaths) {
+      if (!useToolpaths) {
         for (const circle of geometry.circles) {
           entities.push(isR12 ? [
             "0", "CIRCLE", "8", "CUT",
@@ -1011,6 +1018,12 @@ $("#lang-toggle").addEventListener("click", () => {
     url.searchParams.set("lang", currentLang);
   }
   window.history.replaceState(null, "", url);
+  update();
+});
+$("#export-mode-toggle").addEventListener("click", () => {
+  exportMode = exportMode === "part" ? "toolpath" : "part";
+  $("#export-mode-toggle").setAttribute("aria-pressed", String(exportMode === "toolpath"));
+  applyLanguage();
   update();
 });
 $("#export-dxf").addEventListener("change", (event) => {

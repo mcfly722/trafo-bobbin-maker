@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.13
+
+**Export mode toggle: part contour or cutter toolpath**
+
+- **New toggle button in the header** — between the language switch and the Export dropdown, it selects what the DXF export contains: the plain part contour (default) or the milling cutter center toolpath.
+- **The exported contour is highlighted in red on the drawings** — by default the part outline is red; in toolpath mode the cutter path turns red instead.
+- **The cutter toolpath is now drawn in blue** when it is not the selected export contour, so it no longer clashes with the red highlight.
+
 ## v1.11
 
 **Holding tabs (bridges) keep the parts attached to the sheet during milling**
